@@ -1,0 +1,15 @@
+version: '3.0.0'
+services:
+
+  db:
+    image: mongo:7.0.0-rc3-jammy
+    container_name: MongoDB
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root123
+      MONGO_INITDB_DATABASE: theNew
+    volumes:
+      - ./data:/data/
+      - ./init_db:/docker-entrypoint-initdb.d
+    ports:
+      - "27017:27017"
