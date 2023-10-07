@@ -1,32 +1,37 @@
-use mongodb::{
-    options::ClientOptions,
-    Client,
-    error::Result,
-};
-use std::env::var;
-use dotenv::dotenv;
+// modules
+mod db;
+mod models;
+mod server;
 
+use std::fmt;
+use std::fmt::Formatter;
+
+// lib usages
+use dotenv::dotenv;
+use mongodb::{error::Result, Client};
+
+use crate::db::connect_to_mongodb;
+use crate::server::start_app;
+
+pub struct GlobalInfo {
+    db_connection: Result<Client>,
+}
+impl fmt::Debug for GlobalInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        return f.debug_struct("Global Info")
+            .field("Connection", &self.db_connection)
+            .finish()
+    }
+}
 
 #[tokio::main]
 async fn main() {
     #![allow(warnings)]
     load_env();
-    let client = connect_to_mongodb().await;
-}
-
-async fn connect_to_mongodb() -> Result<Client> {
-    let db_user = var("DB_USER").expect("the DB_USER in not set");
-    let db_pass = var("DB_PASS").expect("the DB_PASS in not set");
-    let db_host = var("DB_HOST").expect("the DB_HOST is not set");
-    let db_port = var("DB_PORT").expect("the DB_PORT in not set");
-    let db_name = var("DB_NAME").expect("the DB_NAME is not set");
-    let connection_string = format!(
-        "mongodb://{}:{}@{}:{}/{}",
-        db_user , db_pass , db_host , db_port , db_name
-    );
-    let client_options = ClientOptions::parse(connection_string).await.unwrap();
-    let client = Client::with_options(client_options).unwrap();
-    return Ok(client);
+    let info = GlobalInfo {
+        db_connection: connect_to_mongodb().await,
+    };
+    start_app(info).await;
 }
 
 fn load_env() {
