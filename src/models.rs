@@ -1,14 +1,12 @@
 pub mod product;
-use async_graphql::{Object, Result,};
+use async_graphql::{MergedObject};
+use crate::models::product::ProductQuery;
 
-pub struct MainQuery;
+#[derive(MergedObject , Default)]
+pub struct MainQuery(ProductQuery);
+#[derive(MergedObject , Default)]
 pub struct MainMutation;
-#[Object]
-impl MainQuery{
-    async fn star(&self) -> Result<&str> {
-        // let name = Episode::getName();
-        Ok("ho")
-    }
-}
+
+
 
 

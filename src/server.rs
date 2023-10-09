@@ -8,7 +8,7 @@ use axum::routing::post_service;
 
 
 pub async fn start_app(info: GlobalInfo) {
-    let schema = Schema::build(MainQuery, MainMutation, EmptySubscription)
+    let schema = Schema::build(MainQuery::default(), MainMutation, EmptySubscription)
         .data(info)
         .finish();
 
