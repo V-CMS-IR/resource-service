@@ -5,9 +5,8 @@ services:
     image: mongo:7.0.0-rc3-jammy
     container_name: MongoDB
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root123
-      MONGO_INITDB_DATABASE: theNew
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
     volumes:
       - ./data:/data/
       - ./init_db:/docker-entrypoint-initdb.d
