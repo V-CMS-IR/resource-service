@@ -1,22 +1,35 @@
+pub mod middleware;
+mod gp_middleware;
+
 use crate::models::{MainMutation, MainQuery};
-use crate::DB;
+use crate::data_base::DBConfig;
 use async_graphql::{EmptySubscription, Schema};
-use async_graphql_axum::GraphQL;
-use axum::Router;
-use axum::routing::post_service;
+use axum::{Router, routing::{post}, Server};
+use crate::server::gp_middleware::GraphQlLifeCycle;
+use crate::server::middleware::specify_db;
 
+#[derive(Clone)]
+pub struct AppState {
+    schema: Schema<MainQuery, MainMutation, EmptySubscription>,
+    db: DBConfig,
+}
 
-
-pub async fn start_app(db: DB) {
-    let schema = Schema::build(MainQuery::default(), MainMutation, EmptySubscription)
-        .data(db)
+pub async fn start_app(db: DBConfig) {
+    let schema = Schema::build(MainQuery::default(), MainMutation::default(), EmptySubscription)
+        .extension(GraphQlLifeCycle)
         .finish();
 
-    let app = Router::new().route("/", post_service(GraphQL::new(schema)));
+    let app = Router::new()
+        .route("/", post(specify_db))
+        // .route("/ws", get(graphql_ws_handler))
+        .with_state(AppState {
+            schema,
+            db,
+        });
 
-    println!("GraphiQL IDE: http://localhost:8000");
+    println!("Playground: http://localhost:8000");
 
-    axum::Server::bind(&"127.0.0.1:8000".parse().unwrap())
+    Server::bind(&"127.0.0.1:8000".parse().unwrap())
         .serve(app.into_make_service())
         .await
         .unwrap();

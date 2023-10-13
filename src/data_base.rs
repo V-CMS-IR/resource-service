@@ -1,8 +1,18 @@
 use mongodb::{error::Result, options::ClientOptions, Client};
-use  std::env::var;
+use std::env::var;
 use std::time::Duration;
+use mongodb::{Database};
 
-pub async fn connect_to_mongodb() -> Result<Client> {
+
+#[derive(Debug, Clone)]
+pub struct DBConfig {
+    pub global: Database,
+    pub client: Client,
+}
+
+pub struct DB(pub Database);
+
+pub(super) async fn connect_to_mongodb() -> Result<DBConfig> {
     let db_user = var("DB_USER").expect("the DB_USER in not set");
     let db_pass = var("DB_PASS").expect("the DB_PASS in not set");
     let db_host = var("DB_HOST").expect("the DB_HOST is not set");
@@ -15,12 +25,19 @@ pub async fn connect_to_mongodb() -> Result<Client> {
     client_options.connect_timeout = Some(Duration::from_secs(1));
     let client = Client::with_options(client_options).unwrap();
     check_db_connection(&client).await;
-    Ok(client)
+    let db = initial_data_bases(client).await?;
+    Ok(db)
 }
 
-async fn check_db_connection(client: &Client){
-    let database_names = client.list_database_names(None, None).await.unwrap();
-    println!("Connected to MongoDB. Database names: {:?}", database_names);
-
+async fn check_db_connection(client: &Client) {
+    client.list_database_names(None, None).await.unwrap();
 }
 
+async fn initial_data_bases(client: Client) -> Result<DBConfig> {
+    let global_name = var("DB_GLOBAL_NAME").expect("the DB_SITES_MAP_NAME is not set");
+    let db = DBConfig {
+        global: client.database(&global_name),
+        client,
+    };
+    Ok(db)
+}

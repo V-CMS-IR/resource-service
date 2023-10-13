@@ -1,5 +1,6 @@
-use async_graphql::{Object, Result, SimpleObject, Enum};
+use async_graphql::{Object, Result, SimpleObject, Enum, Context};
 use serde::{Deserialize, Serialize};
+use crate::data_base::{DB};
 
 //TODO Write A Comment For all section of it and separate Sections
 type Creator = i16;
@@ -35,12 +36,18 @@ pub struct Param {
     pub value: String,
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq , Debug ,Serialize , Deserialize)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Status {
     Published,
     Draft,
     Scheduled,
     Pending,
+}
+
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
+pub enum MutationStatus {
+    Success,
+    Failed,
 }
 
 impl Product {
@@ -59,23 +66,30 @@ impl Product {
 
 #[derive(Default)]
 pub struct ProductQuery;
+
 #[derive(Default)]
 pub struct ProductMutation;
+
 #[Object]
 impl ProductQuery {
-    async fn get_enums(&self , name: Status) -> Result<Status>{
+    async fn get_enums(&self, name: Status) -> Result<Status> {
         Ok(name)
     }
 }
 
 #[Object]
 impl ProductMutation {
-    async fn new_product(
+    async fn new_product<'a>(
         &self,
+        ctx: &Context<'_>,
         title: String,
         description: Option<String>,
-        status: Option<Status>
-    ) -> Result<Product> {
-        Ok(Product::new("".to_string(), 0, None ))
+        status: Option<Status>,
+    ) -> Result<MutationStatus> {
+        let product = Product::new(title, 0, description);
+        let db = ctx.data::<DB>()?;
+        let collection = db.0.collection::<Product>("Products");
+        collection.insert_one(&product , None).await.unwrap();
+        Ok(MutationStatus::Success)
     }
 }
