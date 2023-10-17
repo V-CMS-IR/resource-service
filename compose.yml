@@ -1,14 +1,15 @@
 version: '3.0.0'
 services:
 
-  db:
+  CMS_DB:
     image: mongo:7.0.0-rc3-jammy
     container_name: MongoDB
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
+      MONGO_INITDB_ROOT_USERNAME: ${CMS_DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${CMS_DB_PASS}
     volumes:
       - ./data:/data/
       - ./init_db:/docker-entrypoint-initdb.d
     ports:
-      - "27017:27017"
+      - "${CMS_DB_PORT}:27017"
+

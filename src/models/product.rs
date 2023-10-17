@@ -50,6 +50,12 @@ pub enum MutationStatus {
     Failed,
 }
 
+#[derive(Default)]
+pub struct ProductQuery;
+
+#[derive(Default)]
+pub struct ProductMutation;
+
 impl Product {
     pub fn new(title: String, creator: Creator, description: Option<String>) -> Self {
         Self {
@@ -63,12 +69,6 @@ impl Product {
         }
     }
 }
-
-#[derive(Default)]
-pub struct ProductQuery;
-
-#[derive(Default)]
-pub struct ProductMutation;
 
 #[Object]
 impl ProductQuery {
@@ -89,7 +89,7 @@ impl ProductMutation {
         let product = Product::new(title, 0, description);
         let db = ctx.data::<DB>()?;
         let collection = db.0.collection::<Product>("Products");
-        collection.insert_one(&product , None).await.unwrap();
+        collection.insert_one(&product, None).await.unwrap();
         Ok(MutationStatus::Success)
     }
 }

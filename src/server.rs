@@ -6,7 +6,7 @@ use crate::data_base::DBConfig;
 use async_graphql::{EmptySubscription, Schema};
 use axum::{Router, routing::{post}, Server};
 use crate::server::gp_middleware::GraphQlLifeCycle;
-use crate::server::middleware::specify_db;
+use crate::server::middleware::{specify_db};
 
 #[derive(Clone)]
 pub struct AppState {

@@ -1,16 +1,16 @@
 use std::sync::Arc;
-use async_graphql::{async_trait, Request, ServerResult};
-use async_graphql::extensions::{Extension, ExtensionContext, ExtensionFactory, NextPrepareRequest};
+use async_graphql::{async_trait, Request, Response, ServerResult};
+use async_graphql::extensions::{Extension, ExtensionContext, ExtensionFactory, NextPrepareRequest, NextRequest};
+use crate::data_base::DB;
 
 pub(super) struct GraphQlLifeCycle;
 
-#[derive(Debug)]
-pub struct AuthInfo {
-    pub host_name: String,
-}
 
 #[async_trait::async_trait]
 impl Extension for GraphQlLifeCycle {
+    async fn request(&self, ctx: &ExtensionContext<'_>, next: NextRequest<'_>) -> Response {
+        next.run(ctx).await
+    }
     async fn prepare_request(
         &self,
         ctx: &ExtensionContext<'_>,
