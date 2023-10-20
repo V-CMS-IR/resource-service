@@ -1,6 +1,6 @@
-use async_graphql::{Object, Result, SimpleObject, Enum, Context};
+use async_graphql::{Object, Result, SimpleObject, Enum, Context , Error};
+use mongodb::{Database};
 use serde::{Deserialize, Serialize};
-use crate::data_base::{DB};
 
 //TODO Write A Comment For all section of it and separate Sections
 type Creator = i16;
@@ -57,11 +57,11 @@ pub struct ProductQuery;
 pub struct ProductMutation;
 
 impl Product {
-    pub fn new(title: String, creator: Creator, description: Option<String>) -> Self {
+    pub fn new(title: String, creator: Creator, description: Option<String> , status: Option<Status>) -> Self {
         Self {
             title,
             description,
-            status: Status::Scheduled,
+            status: match status { Some(status) => status , None => Status::Scheduled },
             id: None,
             content: None,
             meta: None,
@@ -85,11 +85,14 @@ impl ProductMutation {
         title: String,
         description: Option<String>,
         status: Option<Status>,
-    ) -> Result<MutationStatus> {
-        let product = Product::new(title, 0, description);
-        let db = ctx.data::<DB>()?;
-        let collection = db.0.collection::<Product>("Products");
-        collection.insert_one(&product, None).await.unwrap();
-        Ok(MutationStatus::Success)
+    ) -> Result<String , Error> {
+        let product = Product::new(title, 0, description , status);
+        let db = ctx.data::<Database>().unwrap();
+        let collection = db.collection::<Product>("Products");
+        let insert = collection.insert_one(&product, None).await?;
+        match insert.inserted_id.as_object_id() {
+            Some(id) => Ok(id.to_string()),
+            None => Err(Error::new("Nothing inserted"))
+        }
     }
 }

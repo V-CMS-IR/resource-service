@@ -7,7 +7,6 @@ use crate::server::AppState;
 use crate::GLOBAL_DATA;
 
 
-
 /// this method select the database by host of user
 /// if the host doesn't exists returns error
 pub async fn specify_db(
@@ -20,15 +19,13 @@ pub async fn specify_db(
         Ok(db) => {
             req = req.data(db);
             app_state.schema.execute(req).await.into()
-        },
+        }
         Err(message) => {
-            let error = ServerError::new(message , Some(Pos{ line : 0 , column: 0}));
+            let error = ServerError::new(message, Some(Pos { line: 0, column: 0 }));
             let error_response = Response::from_errors(vec![error]);
             GraphQLResponse::from(error_response)
         }
-    }
-
-
+    };
 }
 
 fn is_valid_data_base(db_name: &String, valid_data_bases: &Vec<String>) -> bool {
@@ -51,7 +48,7 @@ fn get_value_from_headers(key: &str, headers: &HeaderMap) -> String {
     }
 }
 
-fn get_data_base(headers: &HeaderMap) -> Result<Database , String>{
+fn get_data_base(headers: &HeaderMap) -> Result<Database, String> {
     let global_data = GLOBAL_DATA.try_lock();
     if let Ok(mutex_global_data) = global_data {
         if let Some(db_config) = mutex_global_data.get_db_config() {
@@ -62,7 +59,7 @@ fn get_data_base(headers: &HeaderMap) -> Result<Database , String>{
                 Ok(client.database(&db_name))
             } else {
                 Err("Invalid Host ".to_string())
-            }
+            };
         }
     }
     Err("Some thing went wrong #100500 ".to_string())

@@ -1,10 +1,10 @@
 pub mod middleware;
-mod gp_middleware;
+mod graphql_lifecycle;
 
 use crate::models::{MainMutation, MainQuery};
 use async_graphql::{EmptySubscription, Schema};
 use axum::{Router, routing::{post}, Server};
-use crate::server::gp_middleware::GraphQlLifeCycle;
+use crate::server::graphql_lifecycle::GraphQlLifeCycle;
 use crate::server::middleware::{specify_db};
 
 #[derive(Clone)]
@@ -17,7 +17,7 @@ pub async fn start_app() {
         .extension(GraphQlLifeCycle)
         .finish();
     let app = Router::new()
-        .route("/", post(specify_db ))
+        .route("/", post(specify_db))
         // .route("/ws", get(graphql_ws_handler))
         .with_state(AppState {
             schema,
