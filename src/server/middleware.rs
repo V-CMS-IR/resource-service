@@ -1,10 +1,10 @@
-use async_graphql::{ServerError, Response, Pos, InputType};
+use async_graphql::{ServerError, Response, Pos};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use axum::extract::{State};
 use axum::headers::HeaderMap;
 use mongodb::Database;
 use crate::server::AppState;
-use crate::GLOBAL_DATA;
+use crate::global_data::GLOBAL_DATA;
 
 
 /// this method select the database by host of user

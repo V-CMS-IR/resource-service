@@ -1,7 +1,7 @@
 use mongodb::{error::Result, options::ClientOptions, Client};
 use std::env::var;
 use std::time::Duration;
-use crate::GLOBAL_DATA;
+use crate::global_data::GLOBAL_DATA;
 
 #[derive(Debug)]
 pub struct DBConfig {
