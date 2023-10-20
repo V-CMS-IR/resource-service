@@ -3,19 +3,43 @@ mod data_base;
 mod models;
 mod server;
 
+use std::sync::Mutex;
 // lib usages
 use dotenv::dotenv;
-use crate::data_base::connect_to_mongodb;
-use crate::server::start_app;
+use once_cell::sync::Lazy;
 
+#[derive(Debug)]
+pub struct GlobalData {
+    db_config: Option<DBConfig>
+}
+impl GlobalData{
+    pub fn new()-> GlobalData{
+        GlobalData {
+            db_config: None
+        }
+    }
+    pub fn get_db_config(&self) -> Option<&DBConfig> {
+        self.db_config.as_ref()
+    }
+    pub fn set_db_config(&mut self , config: DBConfig){
+        self.db_config = Some(config);
+    }
+}
+
+pub static GLOBAL_DATA: Lazy<Mutex<GlobalData>> = Lazy::new(||{
+    Mutex::new(GlobalData::new())
+});
+
+
+use crate::data_base::{DBConfig, init_db};
+use crate::server::start_app;
 
 #[tokio::main]
 async fn main() {
     #![allow(warnings)]
     load_env();
-    // TODO move this configs to data_base.rs file
-    let db= connect_to_mongodb().await.unwrap();
-    start_app(db).await;
+    init_db().await;
+    start_app().await;
 }
 
 fn load_env() {
