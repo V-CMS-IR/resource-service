@@ -1,16 +1,14 @@
 // modules
 mod data_base;
+mod global_data;
 mod models;
 mod server;
-mod global_data;
-
 
 // lib usages
 use dotenv::dotenv;
 
-use crate::data_base::{init_db};
+use crate::data_base::init_db;
 use crate::server::start_app;
-
 
 fn load_env() {
     dotenv().ok();

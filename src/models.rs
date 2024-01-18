@@ -1,8 +1,7 @@
 pub mod product;
 
-use async_graphql::{MergedObject, Response};
 use crate::models::product::{ProductMutation, ProductQuery};
-use async_graphql::extensions::{Extension, ExtensionContext, NextRequest};
+use async_graphql::MergedObject;
 
 #[derive(MergedObject, Default)]
 pub struct MainQuery(ProductQuery);

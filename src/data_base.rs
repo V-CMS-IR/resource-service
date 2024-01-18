@@ -1,7 +1,9 @@
+#![allow(clippy::await_holding_lock)]
+
+use crate::global_data::GLOBAL_DATA;
 use mongodb::{error::Result, options::ClientOptions, Client};
 use std::env::var;
 use std::time::Duration;
-use crate::global_data::GLOBAL_DATA;
 
 #[derive(Debug)]
 pub struct DBConfig {
@@ -26,10 +28,7 @@ pub async fn get_mongo_client() -> Result<Client> {
     let db_pass = var("CMS_DB_PASS").expect("the DB_PASS in not set");
     let db_host = var("CMS_DB_HOST").expect("the DB_HOST is not set");
     let db_port = var("CMS_DB_PORT").expect("the DB_PORT in not set");
-    let connection_string = format!(
-        "mongodb://{}:{}@{}:{}",
-        db_user, db_pass, db_host, db_port
-    );
+    let connection_string = format!("mongodb://{}:{}@{}:{}", db_user, db_pass, db_host, db_port);
     let mut client_options = ClientOptions::parse(connection_string).await.unwrap();
     client_options.connect_timeout = Some(Duration::from_secs(1));
     let client = Client::with_options(client_options).unwrap();
@@ -43,8 +42,5 @@ async fn check_db_connection(client: &Client) {
 impl DBConfig {
     pub fn get_client(&self) -> &Client {
         &self.client
-    }
-    pub fn get_data_bases(&self) -> &Vec<String> {
-        &self.valid_database
     }
 }
