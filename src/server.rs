@@ -1,7 +1,7 @@
 mod graphql_lifecycle;
 pub mod middleware;
 
-use crate::models::{MainMutation, MainQuery};
+use crate::app::models::{MainMutation, MainQuery};
 use crate::server::graphql_lifecycle::GraphQlLifeCycle;
 use crate::server::middleware::specify_db;
 use async_graphql::{EmptySubscription, Schema};
@@ -28,5 +28,6 @@ pub async fn start_app() {
     let bind = tokio::net::TcpListener::bind(addr)
         .await
         .unwrap_or_else(|_| panic!("Can't bind the address {} ", addr));
+    println!("Server Start at {} " , addr);
     let _ = axum::serve(bind, app.into_make_service()).await;
 }

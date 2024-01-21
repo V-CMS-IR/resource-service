@@ -1,8 +1,8 @@
 // modules
 mod data_base;
-mod global_data;
-mod models;
 mod server;
+mod types;
+mod app;
 
 // lib usages
 use dotenv::dotenv;

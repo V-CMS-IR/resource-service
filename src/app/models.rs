@@ -1,6 +1,6 @@
 pub mod product;
 
-use crate::models::product::{ProductMutation, ProductQuery};
+use product::{ProductMutation, ProductQuery};
 use async_graphql::MergedObject;
 
 #[derive(MergedObject, Default)]

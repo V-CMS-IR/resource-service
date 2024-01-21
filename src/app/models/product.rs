@@ -1,20 +1,30 @@
-use async_graphql::{Object, Result, SimpleObject, Enum, Context , Error};
-use mongodb::{Database};
+use async_graphql::{Enum, Error, Object, Result, SimpleObject};
+use mongodb::bson::{DateTime, doc};
+use mongodb::Database;
+use rm_orm::preload::*;
 use serde::{Deserialize, Serialize};
+
+use crate::types::DateWrapper;
 
 //TODO Write A Comment For all section of it and separate Sections
 type Creator = i16;
 
-#[derive(SimpleObject, Debug, Serialize, Deserialize)]
+
+#[derive(Model, Default, SimpleObject, Debug, Serialize, Deserialize)]
+#[coll_name = "Products"]
 pub struct Product {
     #[graphql(skip)]
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     id: Option<String>,
     pub title: String,
     pub description: Option<String>,
     pub content: Option<Content>,
     pub status: Status,
     pub meta: Option<Vec<Meta>>,
-    pub creator: Creator,
+    pub author: Creator,
+    pub created_at:  DateWrapper<DateTime>,
+    pub update_at: DateWrapper<DateTime>,
+    pub deleted_at: DateWrapper<DateTime>
 }
 
 #[derive(SimpleObject, Debug, Serialize, Deserialize)]
@@ -36,9 +46,10 @@ pub struct Param {
     pub value: String,
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize, Default)]
 pub enum Status {
     Published,
+    #[default]
     Draft,
     Scheduled,
     Pending,
@@ -56,20 +67,6 @@ pub struct ProductQuery;
 #[derive(Default)]
 pub struct ProductMutation;
 
-impl Product {
-    pub fn new(title: String, creator: Creator, description: Option<String> , status: Option<Status>) -> Self {
-        Self {
-            title,
-            description,
-            status: match status { Some(status) => status , None => Status::Scheduled },
-            id: None,
-            content: None,
-            meta: None,
-            creator,
-        }
-    }
-}
-
 #[Object]
 impl ProductQuery {
     async fn get_enums(&self, name: Status) -> Result<Status> {
@@ -81,18 +78,18 @@ impl ProductQuery {
 impl ProductMutation {
     async fn new_product<'a>(
         &self,
-        ctx: &Context<'_>,
         title: String,
         description: Option<String>,
         status: Option<Status>,
-    ) -> Result<String , Error> {
-        let product = Product::new(title, 0, description , status);
-        let db = ctx.data::<Database>().unwrap();
-        let collection = db.collection::<Product>("Products");
-        let insert = collection.insert_one(&product, None).await?;
-        match insert.inserted_id.as_object_id() {
-            Some(id) => Ok(id.to_string()),
-            None => Err(Error::new("Nothing inserted"))
-        }
+    ) -> Result<String, Error> {
+        let db = RmORM::get_db();
+        let mut product = Product::new(&db).await;
+        product.title = title;
+        product.description = description;
+        product.status = status.unwrap_or_default();
+        let re = product.save().await?;
+        Ok(re.inserted_id.to_string())
     }
 }
+
+
