@@ -14,7 +14,7 @@ type Creator = i16;
 // #[derive(Model, Default, SimpleObject, Debug, Serialize, Deserialize)]
 // #[coll_name = "Products"]
 #[Model(coll_name = "Products")]
-#[derive(SimpleObject, Serialize, Deserialize, Default)]
+#[derive(SimpleObject, Serialize, Deserialize, Default , Debug)]
 pub struct Product {
     #[serde(skip_serializing_if = "ObjectID::is_none")]
     _id: ObjectID,
@@ -140,11 +140,23 @@ impl ProductMutation {
                             content: Option<String>,
                             description: Option<String>,
                             status: Option<Status>,
-    ) -> Result<String , Error>{
+    ) -> Result<u64 , Error>{
         let db = RmORM::get_db();
         let mut product = Product::new_model(&db);
-        product._id = object_id.into();
-        Ok("".into())
+        // TODO fix the shit (: about object_id
+        if title.is_some() {
+            product.title = title.unwrap();
+        }
+        if content.is_some()  {
+            product.title = content.unwrap();
+        }
+        if description.is_some()  {
+            product.title = description.unwrap()
+        }
+        if status.is_some() {
+           product.status = status.unwrap();
+        }
+        Ok(product.update().await?)
     }
 }
 

@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use async_graphql::scalar;
 use mongodb::bson::{Bson, DateTime};
 use mongodb::bson::oid::ObjectId;
@@ -19,8 +20,15 @@ scalar!(ObjectID);
 
 impl From<String> for ObjectID{
     fn from(value: String) -> Self {
+
+        let ob_id =mongodb::bson::oid::ObjectId::from_str(&value);
+        if ob_id.is_ok(){
+            return ObjectID(
+                Some(Result::unwrap(ob_id))
+            );
+        }
         ObjectID(
-            Bson::from(value).as_object_id()
+            None
         )
     }
 }
