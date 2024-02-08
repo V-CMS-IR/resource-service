@@ -143,7 +143,7 @@ impl ProductMutation {
     ) -> Result<u64 , Error>{
         let db = RmORM::get_db();
         let mut product = Product::new_model(&db);
-        // TODO fix the shit (: about object_id
+        product._id = object_id.into();
         if title.is_some() {
             product.title = title.unwrap();
         }
@@ -157,6 +157,14 @@ impl ProductMutation {
            product.status = status.unwrap();
         }
         Ok(product.update().await?)
+    }
+
+    async fn delete_product(&self , object_id: String) -> Result<String , Error>{
+       let db = RmORM::get_db();
+        let mut product = Product::new_model(&db);
+        product._id = object_id.into();
+        product.delete().await?;
+        Ok("post deleted".into())
     }
 }
 
