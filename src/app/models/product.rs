@@ -71,7 +71,7 @@ pub struct ProductMutation;
 
 #[Object]
 impl ProductQuery {
-    async fn get_product(&self, object_id: Option<ObjectID>) -> Result<Option<Product>, Error> {
+    async fn product(&self, object_id: Option<ObjectID>) -> Result<Option<Product>, Error> {
         let db = RmORM::get_db();
         let mut product = Product::new_model(&db);
         let mut sample = doc! {
@@ -87,7 +87,7 @@ impl ProductQuery {
 
         Ok(re)
     }
-    async fn get_products(&self) -> Result<Vec<Product>, Error> {
+    async fn products(&self) -> Result<Vec<Product>, Error> {
         let db = RmORM::get_db();
         let product = Product::new_model(&db);
         let sample = Prototype::Doc(
