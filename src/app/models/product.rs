@@ -9,7 +9,7 @@ use crate::types::{DateWrapper, ObjectID};
 
 //TODO Write A Comment For all section of it and separate Sections
 type Creator = i16;
-
+type Price = f32;
 
 // #[derive(Model, Default, SimpleObject, Debug, Serialize, Deserialize)]
 // #[coll_name = "Products"]
@@ -24,6 +24,8 @@ pub struct Product {
     pub status: Status,
     pub meta: Option<Vec<Meta>>,
     pub author: Creator,
+    #[serde(default)]
+    pub price: Price,
     pub created_at: DateWrapper,
     pub updated_at: DateWrapper,
     pub deleted_at: DateWrapper,
@@ -106,6 +108,7 @@ impl ProductQuery {
         }).await;
         let arc_mutex_inner = Arc::try_unwrap(result).map_err(|_| Error::new("Can't get the result"))?;
         let mutex_inner = arc_mutex_inner.into_inner().map_err(|_| Error::new("Can't get the result"))?;
+        println!("the count : {} " , mutex_inner.len());
         Ok(mutex_inner)
     }
 }
@@ -118,12 +121,14 @@ impl ProductMutation {
         content: Option<String>,
         description: Option<String>,
         status: Option<Status>,
+        price: Price,
     ) -> Result<String, Error> {
         let db = RmORM::get_db();
         let mut product = Product::new_model(&db);
         product.title = title;
         product.description = description;
         product.status = status.unwrap_or_default();
+        product.price = price;
         if content.is_some() {
             product.content = Some(Content {
                 params: vec![],
