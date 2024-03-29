@@ -3,7 +3,7 @@ pub mod middleware;
 
 use crate::app::models::{MainMutation, MainQuery};
 use crate::server::graphql_lifecycle::GraphQlLifeCycle;
-use crate::server::middleware::specify_db;
+use crate::server::middleware::execute_gql;
 use async_graphql::{EmptySubscription, Schema};
 use axum::{routing::post, Router};
 
@@ -21,10 +21,10 @@ pub async fn start_app() {
     .extension(GraphQlLifeCycle)
     .finish();
     let app = Router::new()
-        .route("/", post(specify_db))
+        .route("/", post(execute_gql))
         // .route("/ws", get(graphql_ws_handler))
         .with_state(AppState { schema });
-    let addr = "127.0.0.1:8000";
+    let addr = "127.0.0.1:9000";
     let bind = tokio::net::TcpListener::bind(addr)
         .await
         .unwrap_or_else(|_| panic!("Can't bind the address {} ", addr));
