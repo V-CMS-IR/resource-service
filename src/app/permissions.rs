@@ -4,11 +4,11 @@ use strum::{Display, EnumString};
 pub trait Permission where Self: Display {}
 
 #[derive(EnumString , Display)]
-#[strum(prefix="Product|")]
+#[strum(prefix="PRODUCT_")]
 pub enum ProductP {
-    Store,
-    Update,
-    Delete,
+    STORE,
+    UPDATE,
+    DELETE,
 }
 
 impl Permission for ProductP {}

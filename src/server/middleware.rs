@@ -18,6 +18,10 @@ impl Auth{
             "Authorization",
             HeaderValue::from_str(&auth.authentication_token).unwrap(),
         );
+        headers.insert(
+            "Accept",
+            HeaderValue::from_str("application/json").unwrap(),
+        );
         client.default_headers(headers).build().unwrap()
     }
 }

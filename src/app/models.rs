@@ -1,13 +1,12 @@
 pub mod product;
 
-use std::fmt::{Display, Pointer};
-use product::{ProductMutation, ProductQuery};
-use async_graphql::{Context, Guard, MergedObject};
+sssssssssse product::{ProductMutation, ProductQuery};
+use async_graphql::{Context, Error, Guard, MergedObject};
 use async_graphql::async_trait::async_trait;
-use reqwest::Client;
+use serde_json::Value;
 use crate::app::permissions::Permission;
 use crate::server::middleware::Auth;
-use reqwest::header::{HeaderMap, HeaderValue};
+use crate::types::request::JsonAPISchema;
 
 #[derive(MergedObject, Default)]
 pub struct MainQuery(ProductQuery);
@@ -32,8 +31,6 @@ impl<P: Permission> AuthorizeGuard<P>
             permission
         }
     }
-
-
 }
 
 
@@ -46,11 +43,52 @@ impl<P: Permission> Guard for AuthorizeGuard<P>
     async fn check(&self, ctx: &Context<'_>) -> async_graphql::Result<()> {
         let auth = ctx.data::<Auth>().unwrap();
 
-        let p = &self.permission;
-        let client = Auth::prepare_request(&auth) ;
+        let permission = &self.permission;
+        let client = Auth::prepare_request(auth);
         let re = client.get(
-            format!("http://localhost:8000/api/v1/authorize/can/{p}")
+            format!("http://localhost:8000/api/v1/authorize/can/{permission}")
         ).send().await;
-        Ok(())
+
+        return match re {
+            Ok(res) => {
+                if res.status().is_success() {
+                    let body = &res.json::<Value>().await.unwrap();
+                    
+                    let status = body.get("status").unwrap().as_bool().unwrap();
+
+                    if !status {
+                        // TODO add debug support to errors message
+                        return Err(
+                            Error::new(
+                                body.get("errors").expect("errors field must be exists ").as_str().expect("")
+                            )
+                        );
+                    }
+                    //TODO replace empty unwrap 
+                    let data = body.get("data").unwrap().as_object().unwrap();
+                    let can = data.get("can").unwrap().as_bool().unwrap();
+                   
+                    if !can {
+                        return Err(
+                            Error::new(
+                                "Can't act in this section"
+                            )
+                        );
+                    }
+
+                    Ok(())
+                } else {
+                    return Err(Error::new("You don't have permission"));
+                }
+            
+            }
+
+            Err(error) => {
+                panic!("Can't send request to users service");
+            }
+        };
+
+
+        // Ok(())
     }
 }

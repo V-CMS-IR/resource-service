@@ -9,14 +9,14 @@ edition = "2021"
 [dependencies]
 dotenv = "0.15.0"
 mongodb = "2.7.0"
-tokio = {version = "1.32.0" , features = ["full"]}
-async-graphql-axum = { version = "7.0.0"}
-async-graphql = { version = "7.0.0"}
+tokio = { version = "1.32.0", features = ["full"] }
+async-graphql-axum = { version = "7.0.0" }
+async-graphql = { version = "7.0.0" }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.1"
 once_cell = "1.18.0"
-axum = {version = "0.7.4" , features = ["http2"]}
+axum = { version = "0.7.4", features = ["http2"] }
 thiserror = "1.0.56"
-rm_orm = {path = "../../rm_orm"}
-reqwest = "0.12.2"
-strum = { version = "0.26.2" , features = ["derive" , "strum_macros"]}
+rm_orm = { path = "../../rm_orm" }
+reqwest = { version = "0.12.2", features = ["json"] }
+strum = { version = "0.26.2", features = ["derive", "strum_macros"] }
