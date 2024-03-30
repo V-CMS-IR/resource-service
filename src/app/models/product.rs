@@ -4,7 +4,8 @@ use mongodb::bson::doc;
 use rm_orm::{Model, ProxyModelCrud, RmORM};
 use rm_orm::model::Prototype;
 use serde::{Deserialize, Serialize};
-
+use super::{AuthorizeGuard};
+use crate::app::permissions::ProductP;
 use crate::types::{DateWrapper, ObjectID};
 
 //TODO Write A Comment For all section of it and separate Sections
@@ -115,6 +116,7 @@ impl ProductQuery {
 
 #[Object]
 impl ProductMutation {
+    #[graphql(guard = "AuthorizeGuard::new(ProductP::STORE) ")]
     async fn new_product<'a>(
         &self,
         title: String,
@@ -139,6 +141,7 @@ impl ProductMutation {
         Ok(re.inserted_id.to_string())
     }
 
+    #[graphql(guard = "AuthorizeGuard::new(ProductP::UPDATE)")]
     async fn update_product(&self ,
                             object_id: String,
                             title: Option<String> ,
@@ -164,6 +167,7 @@ impl ProductMutation {
         Ok(product.update().await?)
     }
 
+    #[graphql(guard = "AuthorizeGuard::new(ProductP::DELETE)")]
     async fn delete_product(&self , object_id: String) -> Result<String , Error>{
        let db = RmORM::get_db();
         let mut product = Product::new_model(&db);

@@ -1,6 +1,8 @@
+pub(crate) mod request;
+
 use std::str::FromStr;
 use async_graphql::scalar;
-use mongodb::bson::{Bson, DateTime};
+use mongodb::bson::{DateTime};
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
