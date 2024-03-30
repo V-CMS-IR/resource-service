@@ -1,3 +1,5 @@
+#![allow(clippy::upper_case_acronyms)]
+
 use std::fmt::Display;
 use strum::{Display, EnumString};
 

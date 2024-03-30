@@ -1,7 +1,6 @@
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use axum::extract::State;
 use axum::http::{HeaderMap, HeaderValue};
-use mongodb::Database;
 use reqwest::Client;
 
 use crate::server::AppState;
@@ -27,7 +26,7 @@ impl Auth{
 }
 
 /// this method select the database by host of user
-/// if the host doesn't exists returns error
+/// if the host doesn't exist returns error
 pub async fn execute_gql(
     State(app_state): State<AppState>,
     headers: HeaderMap,

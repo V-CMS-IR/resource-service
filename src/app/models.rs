@@ -1,12 +1,11 @@
 pub mod product;
 
-sssssssssse product::{ProductMutation, ProductQuery};
+use product::{ProductMutation, ProductQuery};
 use async_graphql::{Context, Error, Guard, MergedObject};
 use async_graphql::async_trait::async_trait;
 use serde_json::Value;
 use crate::app::permissions::Permission;
 use crate::server::middleware::Auth;
-use crate::types::request::JsonAPISchema;
 
 #[derive(MergedObject, Default)]
 pub struct MainQuery(ProductQuery);
@@ -82,8 +81,8 @@ impl<P: Permission> Guard for AuthorizeGuard<P>
                 }
             
             }
-
-            Err(error) => {
+            //TODO here must create a log 
+            Err(_error) => {
                 panic!("Can't send request to users service");
             }
         };
