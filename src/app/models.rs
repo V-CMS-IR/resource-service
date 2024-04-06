@@ -1,5 +1,6 @@
 pub mod product;
 
+use std::env::var;
 use product::{ProductMutation, ProductQuery};
 use async_graphql::{Context, Error, Guard, MergedObject};
 use async_graphql::async_trait::async_trait;
@@ -44,12 +45,17 @@ impl<P: Permission> Guard for AuthorizeGuard<P>
 
         let permission = &self.permission;
         let client = Auth::prepare_request(auth);
+        
+        let webserver_host = var("WEBSERVER_HOST").expect("the USERS_SERVICE_HOST is not set");
+        let user_service_port = var("USERS_SERVICE_PORT").expect("the USERS_SERVICE_PORT is not set");
+        let htp = format!("http://{webserver_host}:{user_service_port}/api/v1/authorize/can/{permission}");
+        println!("The url {htp}");
         let re = client.get(
-            format!("http://localhost:8000/api/v1/authorize/can/{permission}")
+            htp
         ).send().await;
-
         return match re {
             Ok(res) => {
+                // println!("The Response {:?} " , &res.text().await);
                 if res.status().is_success() {
                     let body = &res.json::<Value>().await.unwrap();
                     
