@@ -1,6 +1,7 @@
 mod graphql_lifecycle;
 pub mod middleware;
 
+use std::env::var;
 use crate::app::models::{MainMutation, MainQuery};
 use crate::server::graphql_lifecycle::GraphQlLifeCycle;
 use crate::server::middleware::execute_gql;
@@ -24,7 +25,11 @@ pub async fn start_app() {
         .route("/", post(execute_gql))
         // .route("/ws", get(graphql_ws_handler))
         .with_state(AppState { schema });
-    let addr = "127.0.0.1:9000";
+    
+    let host = var("APP_HOST").expect("the APP_HOST in not set");
+    let port = var("APP_PORT").expect("the APP_PORT in not set");
+    
+    let addr = &format!("{host}:{port}");
     let bind = tokio::net::TcpListener::bind(addr)
         .await
         .unwrap_or_else(|_| panic!("Can't bind the address {} ", addr));
