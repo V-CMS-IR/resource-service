@@ -32,7 +32,8 @@ impl<P: Permission> AuthorizeGuard<P>
         }
     }
 }
-#[async_trait]
+
+//TODO write a cfg or env for this shity macro
 impl<P:Permission> Guard for AuthorizeGuard<P>
     where P:Send , P:Sync
 {
