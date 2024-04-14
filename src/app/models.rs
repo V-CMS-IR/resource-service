@@ -3,7 +3,6 @@ pub mod product;
 use std::env::var;
 use product::{ProductMutation, ProductQuery};
 use async_graphql::{Context, Error, Guard, MergedObject};
-use async_graphql::async_trait::async_trait;
 use serde_json::Value;
 use crate::app::permissions::Permission;
 use crate::server::middleware::Auth;
@@ -77,11 +76,16 @@ impl<P:Permission> Guard for AuthorizeGuard<P>
                             )
                         );
                     }
-
                     return Ok(());
                 }
-
-                Err(Error::new(""))
+                Err(
+                   Error::new(
+                       format!("The Status {} and message is {}",
+                               res.status().as_str(),
+                               &res.text().await.unwrap().as_str()
+                       )
+                   )
+                )
             },
             Err(error) => {
                 Err(
