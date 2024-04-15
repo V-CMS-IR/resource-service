@@ -1,8 +1,8 @@
 use std::sync::{Arc, Mutex};
 use async_graphql::{Enum, Error, Object, Result, SimpleObject};
 use mongodb::bson::doc;
-use rm_orm::{Model, ProxyModelCrud, RmORM};
-use rm_orm::model::Prototype;
+use spark_orm::{Model, ProxyModelCrud, Spark};
+use spark_orm::model::Prototype;
 use serde::{Deserialize, Serialize};
 use super::{AuthorizeGuard};
 use crate::app::permissions::ProductP;
@@ -75,7 +75,7 @@ pub struct ProductMutation;
 #[Object]
 impl ProductQuery {
     async fn product(&self, object_id: Option<ObjectID>) -> Result<Option<Product>, Error> {
-        let db = RmORM::get_db();
+        let db = Spark::get_db();
         let mut product = Product::new_model(&db);
         let mut sample = doc! {
             "author": 0
@@ -91,26 +91,19 @@ impl ProductQuery {
         Ok(re)
     }
     async fn products(&self) -> Result<Vec<Product>, Error> {
-        let db = RmORM::get_db();
+        let db = Spark::get_db();
         let product = Product::new_model(&db);
         let sample = Prototype::Doc(
             doc! {
                 "author": 0
             }
         );
-        let result = Arc::new(Mutex::new(Vec::new())); // Wrap result in an Arc and a Mutex
-         product.find_with_callback(sample, {
-            let result = Arc::clone(&result); // Clone Arc for the closure
-            move |pr| {
-                // Accessing result inside the closure
-                let mut result = result.lock().unwrap(); // Obtain the lock
-                result.push(pr); // Pushing a String into the vector
-            }
+        let mut re = Vec::new();
+        let _find = product.find_with_callback(sample, |pr|{
+            re.push(pr);
         }).await;
-        let arc_mutex_inner = Arc::try_unwrap(result).map_err(|_| Error::new("Can't get the result"))?;
-        let mutex_inner = arc_mutex_inner.into_inner().map_err(|_| Error::new("Can't get the result"))?;
-        println!("the count : {} " , mutex_inner.len());
-        Ok(mutex_inner)
+        println!("the count : {} " , re.len());
+        Ok(re)
     }
 }
 
@@ -125,7 +118,7 @@ impl ProductMutation {
         status: Option<Status>,
         price: Price,
     ) -> Result<String, Error> {
-        let db = RmORM::get_db();
+        let db = Spark::get_db();
         let mut product = Product::new_model(&db);
         product.title = title;
         product.description = description;
@@ -149,7 +142,7 @@ impl ProductMutation {
                             description: Option<String>,
                             status: Option<Status>,
     ) -> Result<u64 , Error>{
-        let db = RmORM::get_db();
+        let db = Spark::get_db();
         let mut product = Product::new_model(&db);
         product._id = object_id.into();
         if title.is_some() {
@@ -169,7 +162,7 @@ impl ProductMutation {
 
     #[graphql(guard = "AuthorizeGuard::new(ProductP::DELETE)")]
     async fn delete_product(&self , object_id: String) -> Result<String , Error>{
-       let db = RmORM::get_db();
+       let db = Spark::get_db();
         let mut product = Product::new_model(&db);
         product._id = object_id.into();
         product.delete().await?;

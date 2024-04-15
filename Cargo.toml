@@ -17,6 +17,6 @@ serde_json = "1.0.1"
 once_cell = "1.18.0"
 axum = { version = "0.7.4", features = ["http2"] }
 thiserror = "1.0.56"
-rm_orm = { path = "../../rm_orm" }
+spark-orm = { path = "../../rm_orm" }
 reqwest = { version = "0.12.2", features = ["json"] }
 strum = { version = "0.26.2", features = ["derive", "strum_macros"] }
