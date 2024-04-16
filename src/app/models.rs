@@ -46,7 +46,7 @@ impl<P:Permission> Guard for AuthorizeGuard<P>
 
         let webserver_host = var("WEBSERVER_HOST").expect("the USERS_SERVICE_HOST is not set");
         let user_service_port = var("USERS_SERVICE_PORT").expect("the USERS_SERVICE_PORT is not set");
-        let url = format!("http://{webserver_host}:{user_service_port}/api/v1/authorize/can/{permission}");
+        let url = format!("http://{webserver_host}/api/v1/authorize/can/{permission}");
         let response = client.get(
             url
         ).send().await;
