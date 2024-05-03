@@ -1,9 +1,10 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use async_graphql::{Enum, Error, Object, Result, SimpleObject};
 use mongodb::bson::doc;
 use spark_orm::{Model, ProxyModelCrud, Spark};
 use spark_orm::model::Prototype;
 use serde::{Deserialize, Serialize};
+use spark_orm::model::utility::inner_utility::InnerUtility;
 use super::{AuthorizeGuard};
 use crate::app::permissions::ProductP;
 use crate::types::{DateWrapper, ObjectID};
@@ -15,7 +16,7 @@ type Price = f32;
 // #[derive(Model, Default, SimpleObject, Debug, Serialize, Deserialize)]
 // #[coll_name = "Products"]
 #[Model(coll_name = "Products")]
-#[derive(SimpleObject, Serialize, Deserialize, Default , Debug)]
+#[derive(SimpleObject, Serialize, Deserialize, Default, Debug)]
 pub struct Product {
     #[serde(skip_serializing_if = "ObjectID::is_none")]
     _id: ObjectID,
@@ -99,10 +100,10 @@ impl ProductQuery {
             }
         );
         let mut re = Vec::new();
-        let _find = product.find_with_callback(sample, |pr|{
+        let _find = product.find_with_callback(sample, |pr| {
             re.push(pr);
         }).await;
-        println!("the count : {} " , re.len());
+        println!("the count : {} ", re.len());
         Ok(re)
     }
 }
@@ -135,34 +136,58 @@ impl ProductMutation {
     }
 
     #[graphql(guard = "AuthorizeGuard::new(ProductP::UPDATE)")]
-    async fn update_product(&self ,
-                            object_id: String,
-                            title: Option<String> ,
+    async fn update_product(&self,
+                            object_id: ObjectID,
+                            title: Option<String>,
                             content: Option<String>,
                             description: Option<String>,
                             status: Option<Status>,
-    ) -> Result<u64 , Error>{
+                            price: Price,
+    ) -> Result<u64, Error> {
         let db = Spark::get_db();
         let mut product = Product::new_model(&db);
-        product._id = object_id.into();
-        if title.is_some() {
-            product.title = title.unwrap();
+        let id = object_id.0;
+        println!("THE ID {id:?}");
+
+        if let Some(founded_product) = product.find_one(Prototype::Doc(
+           doc! {
+               "_id" : id
+           }
+        )).await? {
+
+            product.fill(founded_product);
+            if title.is_some() {
+                product.title = title.unwrap();
+            }
+            println!("THE CONTENT {:?} " , content.is_some());
+            if content.is_some() {
+                product.content = Some(
+                    Content {
+                        raw_content: content.unwrap(),
+                        params: vec![],
+                    }
+                );
+            }
+            product.description = description;
+            if status.is_some() {
+                product.status = status.unwrap();
+            }
+            product.price = price;
+            return Ok(product.update().await?)
         }
-        if content.is_some()  {
-            product.title = content.unwrap();
-        }
-        if description.is_some()  {
-            product.title = description.unwrap()
-        }
-        if status.is_some() {
-           product.status = status.unwrap();
-        }
-        Ok(product.update().await?)
+
+        Err(
+            Error{
+                message: "Can't find product to update".into(),
+                source: None,
+                extensions: None,
+            }
+        )
     }
 
     #[graphql(guard = "AuthorizeGuard::new(ProductP::DELETE)")]
-    async fn delete_product(&self , object_id: String) -> Result<String , Error>{
-       let db = Spark::get_db();
+    async fn delete_product(&self, object_id: String) -> Result<String, Error> {
+        let db = Spark::get_db();
         let mut product = Product::new_model(&db);
         product._id = object_id.into();
         product.delete().await?;
