@@ -1,4 +1,3 @@
-pub(crate) mod request;
 
 use std::str::FromStr;
 use async_graphql::scalar;
