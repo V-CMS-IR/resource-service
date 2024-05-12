@@ -1,12 +1,13 @@
-use std::collections::HashMap;
-use serde::{Deserialize};
-use serde_json::Value;
+use async_graphql::SimpleObject;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize , Debug)]
-pub struct JsonAPISchema
-{
-    status: bool,
-    data: Value,
-    errors: HashMap<String, String>,
-    timestamp: String,
+#[derive(Debug, Default, Serialize, Deserialize, SimpleObject)]
+pub struct Paginate {
+    pub page: usize,
+    pub total: usize,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, SimpleObject)]
+pub struct MetaData {
+    pub pagination: Paginate,
 }
