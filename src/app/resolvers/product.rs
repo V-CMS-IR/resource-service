@@ -7,6 +7,7 @@ use crate::types::ObjectID;
 use crate::app::permissions::ProductP;
 use crate::app::models::AuthorizeGuard;
 use crate::app::util::{List, MetaData, Paginate};
+use std::borrow::Borrow;
 
 #[derive(Default)]
 pub struct ProductQuery;
@@ -53,12 +54,19 @@ impl ProductQuery {
             .skip(Some(offset as u64))
             .limit(Some(limit as i64)).build();
         let founded = product.find_and_collect(
-            sample,
+            sample.clone(),
             Some(options),
         ).await?;
+
+        let total = product.find_and_collect(
+            sample,
+            None
+            // Some(FindOptions::builder().projection(Some(doc! {"id" : ""})).build())
+        ).await?.iter().count();
+
         let unwrapped_founded: Vec<Product> = founded
             .into_iter()
-            .filter_map(async_graphql::Result::ok) // Filter out Err variants and unwrap Ok variants
+            .filter_map(Result::ok) // Filter out Err variants and unwrap Ok variants
             .collect();
         Ok(
             List{
@@ -66,7 +74,7 @@ impl ProductQuery {
                 meta_data: MetaData{
                     pagination: Paginate {
                         page,
-                        total: 10,
+                        total,
                     }
                 }
             }
