@@ -31,7 +31,7 @@ impl ProductQuery {
             sample,
             None,
         ).await?;
-        if let Some(mut pr) = re {
+        if let Some(pr) = re {
             let rt = pr.take_inner();
             return Ok(
                 Some(

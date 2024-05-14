@@ -1,23 +1,24 @@
-pub mod product;
-mod category;
+pub(crate) mod product;
+pub(crate) mod category;
 
 use std::env::var;
 use async_graphql::{Context, Error, Guard, MergedObject};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use crate::app::permissions::Permission;
+use crate::app::resolvers::category::{CategoryMutation, CategoryQuery};
 use crate::server::middleware::Auth;
 use crate::app::resolvers::product::{ProductMutation, ProductQuery};
 #[derive(MergedObject, Default)]
 pub struct MainQuery(
-    ProductQuery
-
+    ProductQuery,
+    CategoryQuery
 );
 
 #[derive(MergedObject, Default)]
 pub struct MainMutation(
-    ProductMutation
-
+    ProductMutation,
+    CategoryMutation
 );
 
 pub struct AuthorizeGuard<P: Permission> where
@@ -40,7 +41,7 @@ impl<P: Permission> AuthorizeGuard<P>
 }
 
 //TODO write a cfg or env for this shity macro
-impl<P:Permission> Guard for AuthorizeGuard<P>
+impl<P : Permission> Guard for AuthorizeGuard<P>
     where P:Send , P:Sync
 {
 
@@ -51,7 +52,7 @@ impl<P:Permission> Guard for AuthorizeGuard<P>
         let client = Auth::prepare_request(auth);
 
         let webserver_host = var("WEBSERVER_HOST").expect("the USERS_SERVICE_HOST is not set");
-        let url = format!("http://{webserver_host}:/api/v1/authorize/can/{permission}");
+        let url = format!("http://{webserver_host}/api/v1/authorize/can/{permission}");
         let response = client.get(
             url
         ).send().await;

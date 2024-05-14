@@ -8,8 +8,9 @@ use crate::types::DateWrapper;
 #[derive(SimpleObject , Serialize , Deserialize , Default ,  Debug)]
 pub struct Category {
     // #[unique]
-    slug: String,
-    products: Vec<Product>,
+    pub slug: String,
+    pub products: Vec<Product>,
+    pub title: String,
     pub created_at: DateWrapper,
     pub updated_at: DateWrapper,
     pub deleted_at: DateWrapper,
