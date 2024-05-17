@@ -60,7 +60,7 @@ pub async fn execute_gql(
     app_state.schema.execute(req).await.into()
 
 }
-
+#[allow(dead_code)]
 fn is_valid_data_base(db_name: &String, valid_data_bases: &[String]) -> bool {
     valid_data_bases.iter().any(|x| x == db_name)
 }

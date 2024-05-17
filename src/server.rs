@@ -7,7 +7,6 @@ use crate::server::graphql_lifecycle::GraphQlLifeCycle;
 use crate::server::middleware::execute_gql;
 use async_graphql::{EmptySubscription, Schema};
 use axum::{routing::post, Router};
-use axum::extract::DefaultBodyLimit;
 
 #[derive(Clone)]
 pub struct AppState {

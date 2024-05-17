@@ -1,13 +1,13 @@
 use std::str::FromStr;
 use async_graphql::{Context, Object};
 use async_graphql::Error;
-use axum::routing::options;
 use mongodb::bson::{doc};
 use mongodb::bson::oid::ObjectId;
 use mongodb::options::FindOneOptions;
 use crate::app::models::category::Category;
 use crate::app::models::AuthorizeGuard;
 use crate::app::permissions::CategoryPermissions;
+
 #[derive(Default)]
 pub struct CategoryQuery;
 
@@ -16,24 +16,15 @@ pub struct CategoryMutation;
 
 #[Object]
 impl CategoryQuery {
-    pub async fn category(&self, ctx: &Context<'_>, id: String) -> Result<Option<Category>, Error> {
+    pub async fn category(&self, id: String) -> Result<Option<Category>, Error> {
         let mut category_model = Category::new_model(None);
         let id = ObjectId::from_str(&id)?;
-        // we need to define projection for better performance in feature
-        let mut projection = doc! {
-            "_id" : 1,
-            "title": 1,
-            "slug": 1
-        };
-        if ctx.look_ahead().field("products").exists() {
-            projection.insert("products", 1);
-        }
-        let options = FindOneOptions::builder().projection(Some(projection)).build();
+        
         let re = category_model.find_one(
             doc! {
              "_id" : id
            },
-            options,
+            None,
         ).await?;
         if let Some(model) = re {
             return Ok(
@@ -44,14 +35,13 @@ impl CategoryQuery {
         Ok(None)
     }
 
-    pub async fn categories(&self , ctx: &Context<'_>) -> Result<String , Error>{
+    pub async fn categories(&self, _ctx: &Context<'_>) -> Result<String, Error> {
         Ok("difjo".to_string())
     }
 }
 
 #[Object]
 impl CategoryMutation {
-
     #[graphql(guard = "AuthorizeGuard::new(CategoryPermissions::STORE) ")]
     pub async fn new_category(&self, title: String, slug: Option<String>) -> Result<String, Error> {
         Category::store_update_category(None, title, slug).await

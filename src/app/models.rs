@@ -3,7 +3,6 @@ pub(crate) mod category;
 
 use std::env::var;
 use async_graphql::{Context, Error, Guard, MergedObject};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use crate::app::permissions::Permission;
 use crate::app::resolvers::category::{CategoryMutation, CategoryQuery};
