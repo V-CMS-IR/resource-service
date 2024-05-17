@@ -11,7 +11,8 @@ pub type Price = f32;
 #[derive(SimpleObject, Serialize, Deserialize, Default, Debug)]
 pub struct Product {
     #[serde(skip_serializing_if = "ObjectID::is_none")]
-    _id: ObjectID,
+    pub _id: ObjectID,
+    pub category_id: ObjectID,
     pub title: String,
     pub description: Option<String>,
     pub content: Option<Content>,

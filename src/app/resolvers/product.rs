@@ -1,13 +1,15 @@
+use std::str::FromStr;
 use async_graphql::{Error, Object};
 use mongodb::bson::{doc, to_document};
+use mongodb::bson::oid::ObjectId;
 use mongodb::options::FindOptions;
 use spark_orm::Spark;
 use crate::app::models::product::{Content, Product, Status};
 use crate::types::ObjectID;
 use crate::app::permissions::ProductP;
 use crate::app::models::AuthorizeGuard;
+use crate::app::models::category::Category;
 use crate::app::util::{List, MetaData, Paginate};
-use std::borrow::Borrow;
 
 #[derive(Default)]
 pub struct ProductQuery;
@@ -20,6 +22,8 @@ impl ProductQuery {
     async fn product(&self, object_id: Option<ObjectID>) -> async_graphql::Result<Option<Product>, Error> {
         let db = Spark::get_db();
         let mut product = Product::new_model(Some(&db));
+
+        // TODO you must get it from the users service
         let mut sample = doc! {
             "author": 0
         };
@@ -31,7 +35,7 @@ impl ProductQuery {
             sample,
             None,
         ).await?;
-        if let Some(mut pr) = re {
+        if let Some(pr) = re {
             let rt = pr.take_inner();
             return Ok(
                 Some(
@@ -42,11 +46,12 @@ impl ProductQuery {
         Ok(None)
     }
     async fn products(&self, #[graphql(default = 1)] page: usize, #[graphql(default = 15)]limit: usize)
-        -> async_graphql::Result<List<Vec<Product>>, Error> {
+                      -> async_graphql::Result<List<Vec<Product>>, Error> {
         let db = Spark::get_db();
         let product = Product::new_model(Some(&db));
 
         let offset = (page - 1) * limit;
+        // TODO you must get the author from the users service
         let sample = doc! {
                 "author": 0,
             };
@@ -60,7 +65,7 @@ impl ProductQuery {
 
         let total = product.find_and_collect(
             sample,
-            None
+            None,
             // Some(FindOptions::builder().projection(Some(doc! {"id" : ""})).build())
         ).await?.iter().count();
 
@@ -69,14 +74,14 @@ impl ProductQuery {
             .filter_map(Result::ok) // Filter out Err variants and unwrap Ok variants
             .collect();
         Ok(
-            List{
+            List {
                 data: unwrapped_founded,
-                meta_data: MetaData{
+                meta_data: MetaData {
                     pagination: Paginate {
                         page,
                         total,
                     }
-                }
+                },
             }
         )
         // Ok(re)
@@ -88,39 +93,79 @@ impl ProductMutation {
     #[graphql(guard = "AuthorizeGuard::new(ProductP::STORE) ")]
     async fn new_product<'a>(
         &self,
+        category_id: String,
         title: String,
         content: Option<String>,
         description: Option<String>,
         status: Option<Status>,
         price: crate::app::models::product::Price,
     ) -> async_graphql::Result<String, Error> {
-        let db = Spark::get_db();
-        let mut product = Product::new_model(Some(&db));
+        let mut product = Product::new_model(None);
+        let mut category_model = Category::new_model(None);
         product.title = title;
-        product.description = description;
-        product.status = status.unwrap_or_default();
-        product.price = price;
-        if content.is_some() {
-            product.content = Some(Content {
-                params: vec![],
-                raw_content: content.unwrap(),
-            });
+
+        //this is a key to a category
+        let c_id = ObjectId::from_str(&category_id)?;
+        let f_c = category_model.find_one(
+            doc! {
+               "_id" : c_id
+            },
+            None,
+        );
+        match f_c.await? {
+            Some(category_model) => {
+                product.category_id = ObjectID::from(category_model._id.unwrap());
+                product.description = description;
+                product.status = status.unwrap_or_default();
+                product.price = price;
+                if content.is_some() {
+                    product.content = Some(Content {
+                        params: vec![],
+                        raw_content: content.unwrap(),
+                    });
+                }
+                let re = product.save(None).await?;
+                Ok(re.to_string())
+            }
+            None => {
+                return Err(
+                    Error::new(
+                        "Can't find the category"
+                    )
+                );
+            }
         }
-        let re = product.save(None).await?;
-        Ok(re.to_string())
     }
 
     #[graphql(guard = "AuthorizeGuard::new(ProductP::UPDATE)")]
     async fn update_product(&self,
-                            object_id: ObjectID,
+                            id: String,
+                            category_id: Option<String>,
                             title: Option<String>,
                             content: Option<String>,
                             description: Option<String>,
                             status: Option<Status>,
                             price: crate::app::models::product::Price,
     ) -> async_graphql::Result<u64, Error> {
-        let db = Spark::get_db();
-        let mut product = Product::new_model(Some(&db));
+        let mut product = Product::new_model(None);
+
+        if category_id.is_some() {
+            let mut category_model = Category::new_model(None);
+            let f_c = category_model.find_one(
+                doc! {
+               "_id" : category_id.unwrap()
+            },
+                None,
+            ).await?;
+            if let Some(category_model) = f_c {
+                product.category_id = ObjectID::from(category_model._id.unwrap());
+            } else {
+                return Err(
+                    Error::new("Can't find the category")
+                );
+            }
+
+        }
 
         if title.is_some() {
             product.title = title.unwrap();
@@ -138,7 +183,7 @@ impl ProductMutation {
             product.status = status.unwrap();
         }
         product.price = price;
-        let id = object_id.0;
+        let id = ObjectId::from_str(&id)?;
         let doc = to_document(&product.take_inner())?;
         let result = product.update(
             doc! {
@@ -166,13 +211,13 @@ impl ProductMutation {
     #[graphql(guard = "AuthorizeGuard::new(ProductP::DELETE)")]
     async fn delete_product(&self, object_id: ObjectID) -> async_graphql::Result<String, Error> {
         let db = Spark::get_db();
-        let mut product = Product::new_model(Some(&db));
+        let product = Product::new_model(Some(&db));
         let id = object_id.0;
         let re = product.delete(
-            doc!{
+            doc! {
               "_id" : id
             },
-            None
+            None,
         ).await?;
         println!("THE RE {re}");
         Ok("post deleted".into())
