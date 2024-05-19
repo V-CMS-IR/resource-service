@@ -13,6 +13,15 @@ pub enum ProductP {
     DELETE,
 }
 
-impl Permission for ProductP {}
+#[derive(EnumString , Display)]
+#[strum(prefix="CATEGORY_")]
+pub enum CategoryPermissions{
+    STORE,
+    UPDATE,
+    DELETE
+}
 
+// TODO remove these shity trait and found another way
+impl Permission for ProductP {}
+impl Permission for CategoryPermissions{}
 
