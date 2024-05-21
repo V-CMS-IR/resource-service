@@ -46,7 +46,7 @@ impl ProductQuery {
         Ok(None)
     }
     async fn products(&self, #[graphql(default = 1)] page: usize, #[graphql(default = 15)]limit: usize)
-                      -> async_graphql::Result<List<Vec<Product>>, Error> {
+                      -> async_graphql::Result<List<Product>, Error> {
         let db = Spark::get_db();
         let product = Product::new_model(Some(&db));
 

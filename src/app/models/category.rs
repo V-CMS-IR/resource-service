@@ -5,6 +5,7 @@ use crate::types::DateWrapper;
 
 #[Model(coll_name="categories")]
 #[derive(SimpleObject , Serialize , Deserialize , Default ,  Debug)]
+#[graphql(complex)]
 pub struct Category {
     // #[unique]
     pub slug: String,
