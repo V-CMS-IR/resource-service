@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use async_graphql::{Error, Object};
-use mongodb::bson::{doc, to_document};
+use mongodb::bson::{Bson, doc, to_document};
 use mongodb::bson::oid::ObjectId;
 use mongodb::options::FindOptions;
 use spark_orm::Spark;
@@ -139,8 +139,8 @@ impl ProductMutation {
 
     #[graphql(guard = "AuthorizeGuard::new(ProductP::UPDATE)")]
     async fn update_product(&self,
-                            id: String,
-                            category_id: Option<String>,
+                            id: ObjectID,
+                            category_id: ObjectID,
                             title: Option<String>,
                             content: Option<String>,
                             description: Option<String>,
@@ -149,11 +149,11 @@ impl ProductMutation {
     ) -> async_graphql::Result<u64, Error> {
         let mut product = Product::new_model(None);
 
-        if category_id.is_some() {
+        if category_id.0.is_some() {
             let mut category_model = Category::new_model(None);
             let f_c = category_model.find_one(
                 doc! {
-               "_id" : category_id.unwrap()
+               "_id" : category_id.0.unwrap()
             },
                 None,
             ).await?;
@@ -183,11 +183,10 @@ impl ProductMutation {
             product.status = status.unwrap();
         }
         product.price = price;
-        let id = ObjectId::from_str(&id)?;
         let doc = to_document(&product.take_inner())?;
         let result = product.update(
             doc! {
-                "_id": id
+                "_id": id.0
             },
             doc! {
                 "$set": doc
