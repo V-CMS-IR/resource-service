@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use async_graphql::{Error, Object};
-use mongodb::bson::{Bson, doc, to_document};
+use mongodb::bson::{doc, to_document};
 use mongodb::bson::oid::ObjectId;
 use mongodb::options::FindOptions;
 use spark_orm::Spark;
@@ -164,7 +164,6 @@ impl ProductMutation {
                     Error::new("Can't find the category")
                 );
             }
-
         }
 
         if title.is_some() {

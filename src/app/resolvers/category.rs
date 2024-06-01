@@ -92,7 +92,7 @@ impl CategoryMutation {
 
     #[graphql(guard = "AuthorizeGuard::new(CategoryPermissions::DELETE) ")]
     pub async fn delete_category(&self, id: ObjectID) -> Result<u64, Error> {
-        let mut category_model = Category::new_model(None);
+        let category_model = Category::new_model(None);
         let re = category_model.delete(
             doc! {
                 "_id": id.0

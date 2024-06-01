@@ -1,9 +1,11 @@
 pub(crate) mod product;
 pub(crate) mod category;
+pub(crate) mod brand;
 
 use std::env::var;
 use async_graphql::{Context, Error, Guard, MergedObject};
 use serde_json::Value;
+use crate::app::resolvers::brand::{BrandMutation, BrandQuery};
 use crate::app::permissions::Permission;
 use crate::app::resolvers::category::{CategoryMutation, CategoryQuery};
 use crate::server::middleware::Auth;
@@ -11,13 +13,15 @@ use crate::app::resolvers::product::{ProductMutation, ProductQuery};
 #[derive(MergedObject, Default)]
 pub struct MainQuery(
     ProductQuery,
-    CategoryQuery
+    CategoryQuery,
+    BrandQuery
 );
 
 #[derive(MergedObject, Default)]
 pub struct MainMutation(
     ProductMutation,
-    CategoryMutation
+    CategoryMutation,
+    BrandMutation
 );
 
 pub struct AuthorizeGuard<P: Permission> where
