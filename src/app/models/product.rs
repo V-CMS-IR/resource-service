@@ -1,28 +1,21 @@
 use async_graphql::{Enum, SimpleObject};
+use mongodb::bson::oid::ObjectId;
 use spark_orm::{Model};
 use serde::{Deserialize, Serialize};
-use crate::types::{DateWrapper, ObjectID};
 
 //TODO Write A Comment For all section of it and separate Sections
-pub type Creator = i16;
 pub type Price = f32;
 
-#[Model(coll_name = "Products")]
+#[Model(coll_name = "products")]
 #[derive(SimpleObject, Serialize, Deserialize, Default, Debug)]
 pub struct Product {
-    #[serde(skip_serializing_if = "ObjectID::is_none")]
-    pub _id: ObjectID,
-    pub category_id: ObjectID,
     pub title: String,
     pub description: Option<String>,
     pub content: Option<Content>,
     pub status: Status,
     pub meta: Option<Vec<Meta>>,
-    pub author: Creator,
     pub price: Price,
-    pub created_at: DateWrapper,
-    pub updated_at: DateWrapper,
-    pub deleted_at: DateWrapper,
+    pub brand_id: ObjectId,
 }
 
 
