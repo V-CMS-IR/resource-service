@@ -6,6 +6,7 @@ use mongodb::bson::oid::ObjectId;
 use mongodb::options::{FindOptions};
 use crate::app::models::category::Category;
 use crate::app::models::AuthorizeGuard;
+use crate::app::models::game::Game;
 use crate::app::permissions::CategoryPermissions;
 use crate::app::util::{List, MetaData, Paginate};
 use crate::types::ObjectID;
@@ -71,6 +72,7 @@ impl CategoryQuery {
                     pagination: Paginate {
                         page,
                         total,
+                        limit,
                     }
                 },
             }
@@ -109,7 +111,27 @@ impl Category {
         //TODO here must fetch the products
         Ok("NOT IMPLEMENTED YET".to_string())
     }
+
+    pub async fn games(&self, #[graphql(default)] paginate: Paginate) -> Result<List<Game>, Error> {
+        //TODO must move this process to a game impl for access in everywhere
+        let game_model = Game::new_model(None);
+        let game_ids = &self.games_id;
+        let games = game_model.find_and_collect(
+            doc! {
+                "_id": game_ids
+            },
+            None,
+        ).await?;
+        let data: Vec<Game> = games.into_iter()
+            .filter_map(|game| game.ok())
+            .collect();
+        let list = List::new(data);
+        Ok(
+            list
+        )
+    }
 }
+
 
 impl Category {
     async fn store_update_category(id: Option<String>, title: String, slug: Option<String>)

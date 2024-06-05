@@ -80,6 +80,7 @@ impl ProductQuery {
                     pagination: Paginate {
                         page,
                         total,
+                        limit
                     }
                 },
             }
@@ -114,7 +115,6 @@ impl ProductMutation {
         );
         match f_c.await? {
             Some(category_model) => {
-                product.category_id = ObjectID::from(category_model._id.unwrap());
                 product.description = description;
                 product.status = status.unwrap_or_default();
                 product.price = price;
@@ -157,13 +157,6 @@ impl ProductMutation {
             },
                 None,
             ).await?;
-            if let Some(category_model) = f_c {
-                product.category_id = ObjectID::from(category_model._id.unwrap());
-            } else {
-                return Err(
-                    Error::new("Can't find the category")
-                );
-            }
         }
 
         if title.is_some() {
