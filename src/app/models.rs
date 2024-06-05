@@ -1,6 +1,7 @@
 pub(crate) mod product;
 pub(crate) mod category;
 pub(crate) mod brand;
+pub(crate) mod game;
 
 use std::env::var;
 use async_graphql::{Context, Error, Guard, MergedObject};
@@ -54,8 +55,8 @@ impl<P : Permission> Guard for AuthorizeGuard<P>
         let permission = &self.permission;
         let client = Auth::prepare_request(auth);
 
-        let webserver_host = var("WEBSERVER_HOST").expect("the USERS_SERVICE_HOST is not set");
-        let url = format!("http://{webserver_host}/api/v1/authorize/can/{permission}");
+        let authorize_url = var("AUTHORIZE_URL").expect("The AUTHORIZE_URL is not set");
+        let url = format!("{authorize_url}/{permission}");
         let response = client.get(
             url
         ).send().await;
