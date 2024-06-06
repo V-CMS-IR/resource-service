@@ -10,7 +10,7 @@ pub struct Category {
     pub slug: String,
     pub title: String,
     #[graphql(skip)]
-    pub games_id: Vec<ObjectId>,
+    pub game_ids: Vec<ObjectId>,
 
     // we resolve the games with custom resolver
 }
