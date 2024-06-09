@@ -45,6 +45,10 @@ impl<D> List<D>
             },
         }
     }
+
+    pub fn set_paginate(&mut self , paginate: Paginate){
+        self.meta_data.pagination = paginate;
+    }
 }
 
 

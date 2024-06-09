@@ -108,11 +108,12 @@ impl CategoryMutation {
 #[ComplexObject]
 impl Category {
     pub async fn games(&self, #[graphql(default)] paginate: Paginate) -> Result<List<Game>> {
-        let data = Game::get_games(
-            Some(&self.game_ids),
+        let data = Game::get_games_by_category(
+            self._id.unwrap(),
             Some(paginate),
-        ).await;
-        let list = List::new(data?);
+        ).await?;
+
+        let list = List::new(data);
         // list.meta_data.pagination
         Ok(
             list

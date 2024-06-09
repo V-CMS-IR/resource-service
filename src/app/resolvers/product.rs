@@ -114,7 +114,7 @@ impl ProductMutation {
             None,
         );
         match f_c.await? {
-            Some(category_model) => {
+            Some(_) => {
                 product.description = description;
                 product.status = status.unwrap_or_default();
                 product.price = price;
@@ -151,7 +151,7 @@ impl ProductMutation {
 
         if category_id.0.is_some() {
             let mut category_model = Category::new_model(None);
-            let f_c = category_model.find_one(
+            let _ = category_model.find_one(
                 doc! {
                "_id" : category_id.0.unwrap()
             },

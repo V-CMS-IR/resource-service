@@ -1,5 +1,4 @@
 use async_graphql::SimpleObject;
-use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 use spark_orm::Model;
 
@@ -9,8 +8,5 @@ use spark_orm::Model;
 pub struct Category {
     pub slug: String,
     pub title: String,
-    #[graphql(skip)]
-    pub game_ids: Vec<ObjectId>,
-
     // we resolve the games with custom resolver
 }

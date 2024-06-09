@@ -9,20 +9,23 @@ use serde_json::Value;
 use crate::app::resolvers::brand::{BrandMutation, BrandQuery};
 use crate::app::permissions::Permission;
 use crate::app::resolvers::category::{CategoryMutation, CategoryQuery};
+use crate::app::resolvers::game::{GameMutation, GameQuery};
 use crate::server::middleware::Auth;
 use crate::app::resolvers::product::{ProductMutation, ProductQuery};
 #[derive(MergedObject, Default)]
 pub struct MainQuery(
     ProductQuery,
     CategoryQuery,
-    BrandQuery
+    BrandQuery,
+    GameQuery
 );
 
 #[derive(MergedObject, Default)]
 pub struct MainMutation(
     ProductMutation,
     CategoryMutation,
-    BrandMutation
+    BrandMutation,
+    GameMutation
 );
 
 pub struct AuthorizeGuard<P: Permission> where
