@@ -6,7 +6,7 @@ use mongodb::options::FindOptions;
 use spark_orm::Spark;
 use crate::app::models::product::{Content, Product, Status};
 use crate::types::ObjectID;
-use crate::app::permissions::ProductP;
+use crate::app::permissions::ProductPermissions;
 use crate::app::models::AuthorizeGuard;
 use crate::app::models::category::Category;
 use crate::app::util::{List, MetaData, Paginate};
@@ -91,7 +91,7 @@ impl ProductQuery {
 
 #[Object]
 impl ProductMutation {
-    #[graphql(guard = "AuthorizeGuard::new(ProductP::STORE) ")]
+    #[graphql(guard = "AuthorizeGuard::new(ProductPermissions::STORE) ")]
     async fn new_product<'a>(
         &self,
         category_id: String,
@@ -137,7 +137,7 @@ impl ProductMutation {
         }
     }
 
-    #[graphql(guard = "AuthorizeGuard::new(ProductP::UPDATE)")]
+    #[graphql(guard = "AuthorizeGuard::new(ProductPermissions::UPDATE)")]
     async fn update_product(&self,
                             id: ObjectID,
                             category_id: ObjectID,
@@ -199,7 +199,7 @@ impl ProductMutation {
         )
     }
 
-    #[graphql(guard = "AuthorizeGuard::new(ProductP::DELETE)")]
+    #[graphql(guard = "AuthorizeGuard::new(ProductPermissions::DELETE)")]
     async fn delete_product(&self, object_id: ObjectID) -> async_graphql::Result<String, Error> {
         let db = Spark::get_db();
         let product = Product::new_model(Some(&db));

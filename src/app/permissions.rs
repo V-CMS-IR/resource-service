@@ -7,7 +7,7 @@ pub trait Permission where Self: Display {}
 
 #[derive(EnumString , Display)]
 #[strum(prefix="PRODUCT_")]
-pub enum ProductP {
+pub enum ProductPermissions {
     STORE,
     UPDATE,
     DELETE,
@@ -22,6 +22,6 @@ pub enum CategoryPermissions{
 }
 
 // TODO remove these shity trait and found another way
-impl Permission for ProductP {}
+impl Permission for ProductPermissions {}
 impl Permission for CategoryPermissions{}
 
