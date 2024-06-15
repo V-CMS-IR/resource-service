@@ -1,11 +1,10 @@
-use std::collections::HashMap;
-use async_graphql::SimpleObject;
-use mongodb::bson::{DateTime, doc};
+use async_graphql::{InputObject, SimpleObject};
+use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
 use mongodb::options::FindOptions;
 use serde::{Deserialize, Serialize};
 use spark_orm::Model;
-use crate::app::types::Result;
+use crate::app::types::{DateTime, Result};
 use crate::app::util::Paginate;
 
 #[Model(coll_name = "games")]
@@ -15,7 +14,7 @@ pub struct Game {
     pub slug: String,
     pub category_id: ObjectId,
     //TODO write these in resolvers
-    pub release_date: DateTime,
+    pub release_date: Option<DateTime>,
     pub metas: String, // change this to hashmap,
     pub game_brief: String,
 
@@ -26,6 +25,15 @@ pub struct Game {
     // related blogs
 }
 
+#[derive(InputObject, Serialize, Deserialize, Debug)]
+pub struct GameInput {
+    pub title: String,
+    pub slug: String,
+    pub category_id: ObjectId,
+    pub release_date: Option<String>,
+    pub metas: String, // change this to hashmap,
+    pub game_brief: String,
+}
 
 impl Game {
     pub async fn get_games_by_category(category_id: impl Into<ObjectId>, paginate: Option<Paginate>) -> Result<Vec<Game>> {
@@ -58,3 +66,5 @@ impl Game {
         Ok(data)
     }
 }
+
+

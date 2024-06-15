@@ -1,7 +1,7 @@
 use async_graphql::Object;
 use mongodb::bson::oid::ObjectId;
-use crate::app::models::game::Game;
-use crate::app::types::{Error, Result};
+use crate::app::models::game::{Game, GameInput};
+use crate::app::types::{DateTime, Result};
 use mongodb::bson::{Bson, doc};
 use mongodb::options::FindOptions;
 use crate::app::models::category::Category;
@@ -16,7 +16,7 @@ pub struct GameMutation;
 #[Object]
 impl GameQuery {
     pub async fn games(&self, #[graphql(default)] paginate: Paginate) -> Result<List<Game>> {
-        let mut game_model = Game::new_model(None);
+        let game_model = Game::new_model(None);
         let option = FindOptions::builder().skip(
             Some(paginate.get_offset() as u64)
         ).limit(
@@ -37,26 +37,45 @@ impl GameQuery {
 
 #[Object]
 impl GameMutation {
-    pub async fn new_game(&self, category_id: ObjectId, title: String, slug: String) -> Result<Bson> {
+    pub async fn new_game(&self, data: GameInput) -> Result<Bson> {
+        Game::store_update(None , data).await
+    }
+
+    pub async fn update_game(&self, game_id: ObjectId, data: GameInput) -> Result<Bson> {
+        Game::store_update(Some(game_id), data).await
+    }
+}
+
+impl Game {
+    pub async fn store_update(id: Option<ObjectId>, data: GameInput) -> Result<Bson> {
         let mut game_model = Game::new_model(None);
         let mut category = Category::new_model(None);
-        let founded_cat = category.find_one(
+
+        let _ = category.find_one(
             doc! {
-                "_id": category_id
+                "_id": data.category_id
             },
             None,
-        ).await?;
+        ).await.expect("Can't find the Category");
 
-        if founded_cat.is_some() {
-            game_model.title = title;
-            game_model.slug = slug;
-            game_model.category_id = category_id;
-            let id = game_model.save(None).await?;
-            return Ok(id);
+        if let Some(id) = id {
+            game_model.find_one(
+                doc! {
+                    "_id" : id
+                },
+                None,
+            ).await.expect("Can't find Game");
         }
 
-        return Err(
-            Error::new("Can't find category")
-        );
+        game_model.title = data.title;
+        game_model.slug = data.slug;
+        game_model.category_id = data.category_id;
+        if let Some(datetime) = data.release_date {
+            game_model.release_date = Some(DateTime::from(datetime));
+        }
+        game_model.metas = data.metas;
+        game_model.game_brief = data.game_brief;
+        let insert_update_id = game_model.save(None).await?;
+        Ok(insert_update_id)
     }
 }
