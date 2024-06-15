@@ -3,8 +3,6 @@
 use std::fmt::Display;
 use strum::{Display, EnumString};
 
-pub trait Permission where Self: Display {}
-
 #[derive(EnumString , Display)]
 #[strum(prefix="PRODUCT_")]
 pub enum ProductPermissions {
@@ -16,6 +14,14 @@ pub enum ProductPermissions {
 #[derive(EnumString , Display)]
 #[strum(prefix="CATEGORY_")]
 pub enum CategoryPermissions{
+    STORE,
+    UPDATE,
+    DELETE
+}
+
+#[derive(EnumString , Display)]
+#[strum(prefix="GAME_")]
+pub enum GamePermissions{
     STORE,
     UPDATE,
     DELETE

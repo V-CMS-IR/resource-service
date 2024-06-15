@@ -6,6 +6,8 @@ use mongodb::bson::{Bson, doc};
 use mongodb::options::FindOptions;
 use crate::app::models::category::Category;
 use crate::app::util::{List, Paginate};
+use crate::app::permissions::GamePermissions;
+use crate::app::models::AuthorizeGuard;
 
 #[derive(Default)]
 pub struct GameQuery;
@@ -33,14 +35,33 @@ impl GameQuery {
 
         Ok(list)
     }
+
+    pub async fn game(&self , game_id: ObjectId) -> Result<Option<Game>>{
+        let mut game_model = Game::new_model(None);
+        let game = game_model.find_one(
+            doc! {
+                "_id": game_id
+            },
+            None,
+        ).await?;
+
+        if let Some(game) = game {
+            return Ok(
+                Some(game.take_inner())
+            );
+        }
+
+        Ok(None)
+    }
 }
 
 #[Object]
 impl GameMutation {
+    #[graphql(guard = "AuthorizeGuard::new(GamePermissions::STORE) ")]
     pub async fn new_game(&self, data: GameInput) -> Result<Bson> {
         Game::store_update(None , data).await
     }
-
+    #[graphql(guard = "AuthorizeGuard::new(GamePermissions::UPDATE) ")]
     pub async fn update_game(&self, game_id: ObjectId, data: GameInput) -> Result<Bson> {
         Game::store_update(Some(game_id), data).await
     }
