@@ -20,8 +20,3 @@ pub enum CategoryPermissions{
     UPDATE,
     DELETE
 }
-
-// TODO remove these shity trait and found another way
-impl Permission for ProductPermissions {}
-impl Permission for CategoryPermissions{}
-

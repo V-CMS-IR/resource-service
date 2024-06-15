@@ -4,20 +4,21 @@ pub(crate) mod brand;
 pub(crate) mod game;
 
 use std::env::var;
+use std::fmt::Display;
 use async_graphql::{Context, Error, Guard, MergedObject};
 use serde_json::Value;
 use crate::app::resolvers::brand::{BrandMutation, BrandQuery};
-use crate::app::permissions::Permission;
 use crate::app::resolvers::category::{CategoryMutation, CategoryQuery};
 use crate::app::resolvers::game::{GameMutation, GameQuery};
 use crate::server::middleware::Auth;
 use crate::app::resolvers::product::{ProductMutation, ProductQuery};
+
 #[derive(MergedObject, Default)]
 pub struct MainQuery(
     ProductQuery,
     CategoryQuery,
     BrandQuery,
-    GameQuery
+    GameQuery,
 );
 
 #[derive(MergedObject, Default)]
@@ -25,17 +26,17 @@ pub struct MainMutation(
     ProductMutation,
     CategoryMutation,
     BrandMutation,
-    GameMutation
+    GameMutation,
 );
 
-pub struct AuthorizeGuard<P: Permission> where
+pub struct AuthorizeGuard<P> where
     P: Sync,
     P: Send
 {
     permission: P,
 }
 
-impl<P: Permission> AuthorizeGuard<P>
+impl<P> AuthorizeGuard<P>
     where
         P: Sync,
         P: Send
@@ -48,11 +49,10 @@ impl<P: Permission> AuthorizeGuard<P>
 }
 
 //TODO write a cfg or env for this shity macro
-impl<P : Permission> Guard for AuthorizeGuard<P>
-    where P:Send , P:Sync
+impl<P> Guard for AuthorizeGuard<P>
+    where P: Send, P: Sync, P: Display
 {
-
-    async fn check(&self , ctx: &Context<'_>)-> async_graphql::Result<()> {
+    async fn check(&self, ctx: &Context<'_>) -> async_graphql::Result<()> {
         let auth = ctx.data::<Auth>().unwrap();
 
         let permission = &self.permission;
@@ -93,20 +93,20 @@ impl<P : Permission> Guard for AuthorizeGuard<P>
                     return Ok(());
                 }
                 Err(
-                   Error::new(
-                       format!("The Status {} and message is {}",
-                               res.status().as_str(),
-                               &res.text().await.unwrap().as_str()
-                       )
-                   )
+                    Error::new(
+                        format!("The Status {} and message is {}",
+                                res.status().as_str(),
+                                &res.text().await.unwrap().as_str()
+                        )
+                    )
                 )
-            },
+            }
             Err(error) => {
                 Err(
                     error.into()
                 )
             }
-        }
+        };
     }
 }
 
