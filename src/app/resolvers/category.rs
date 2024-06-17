@@ -1,14 +1,15 @@
 use std::str::FromStr;
 use async_graphql::{ComplexObject, Object};
-use async_graphql::Error;
 use mongodb::bson::{Bson, doc};
 use mongodb::bson::oid::ObjectId;
 use mongodb::options::{FindOptions};
 use crate::app::models::category::Category;
 use crate::app::models::AuthorizeGuard;
+use crate::app::models::game::Game;
 use crate::app::permissions::CategoryPermissions;
 use crate::app::util::{List, MetaData, Paginate};
 use crate::types::ObjectID;
+use crate::app::types::Result;
 
 #[derive(Default)]
 pub struct CategoryQuery;
@@ -20,7 +21,7 @@ type CategoryList = List<Category>;
 
 #[Object]
 impl CategoryQuery {
-    pub async fn category(&self, id: String) -> Result<Option<Category>, Error> {
+    pub async fn category(&self, id: String) -> Result<Option<Category>> {
         let mut category_model = Category::new_model(None);
         let id = ObjectId::from_str(&id)?;
 
@@ -40,7 +41,7 @@ impl CategoryQuery {
     }
 
     pub async fn categories(&self, #[graphql(default = 1)] page: usize, #[graphql(default = 15)]limit: usize)
-                            -> Result<CategoryList, Error> {
+                            -> Result<CategoryList> {
         let category_model = Category::new_model(None);
 
         let offset = (page - 1) * limit;
@@ -62,7 +63,7 @@ impl CategoryQuery {
 
         let unwrapped_founded: Vec<Category> = founded
             .into_iter()
-            .filter_map(Result::ok) // Filter out Err variants and unwrap Ok variants
+            .filter_map(|category| category.ok()) // Filter out Err variants and unwrap Ok variants
             .collect();
         Ok(
             List {
@@ -71,6 +72,7 @@ impl CategoryQuery {
                     pagination: Paginate {
                         page,
                         total,
+                        limit,
                     }
                 },
             }
@@ -81,18 +83,18 @@ impl CategoryQuery {
 #[Object]
 impl CategoryMutation {
     #[graphql(guard = "AuthorizeGuard::new(CategoryPermissions::STORE) ")]
-    pub async fn new_category(&self, title: String, slug: Option<String>) -> Result<Bson, Error> {
+    pub async fn new_category(&self, title: String, slug: Option<String>) -> Result<Bson> {
         Category::store_update_category(None, title, slug).await
     }
 
     #[graphql(guard = "AuthorizeGuard::new(CategoryPermissions::UPDATE) ")]
-    pub async fn update_category(&self, id: String, title: String, slug: Option<String>) -> Result<Bson, Error> {
+    pub async fn update_category(&self, id: String, title: String, slug: Option<String>) -> Result<Bson> {
         Category::store_update_category(Some(id), title, slug).await
     }
 
     #[graphql(guard = "AuthorizeGuard::new(CategoryPermissions::DELETE) ")]
-    pub async fn delete_category(&self, id: ObjectID) -> Result<u64, Error> {
-        let mut category_model = Category::new_model(None);
+    pub async fn delete_category(&self, id: ObjectID) -> Result<u64> {
+        let category_model = Category::new_model(None);
         let re = category_model.delete(
             doc! {
                 "_id": id.0
@@ -105,15 +107,24 @@ impl CategoryMutation {
 
 #[ComplexObject]
 impl Category {
-    pub async fn products(&self) -> Result<String, Error> {
-        //TODO here must fetch the products
-        Ok("NOT IMPLEMENTED YET".to_string())
+    pub async fn games(&self, #[graphql(default)] paginate: Paginate) -> Result<List<Game>> {
+        let data = Game::get_games_by_category(
+            self._id.unwrap(),
+            Some(paginate),
+        ).await?;
+
+        let list = List::new(data);
+        // list.meta_data.pagination
+        Ok(
+            list
+        )
     }
 }
 
+
 impl Category {
     async fn store_update_category(id: Option<String>, title: String, slug: Option<String>)
-                                   -> Result<Bson, Error>
+                                   -> Result<Bson>
     {
         let mut category_model = Category::new_model(None);
         if id.is_some() {
