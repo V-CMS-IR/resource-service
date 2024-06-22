@@ -9,6 +9,7 @@ use crate::app::util::Paginate;
 
 #[Model(coll_name = "games")]
 #[derive(SimpleObject, Serialize, Deserialize, Default, Debug)]
+#[graphql(complex)]
 pub struct Game {
     pub title: String,
     pub slug: String,
@@ -18,8 +19,15 @@ pub struct Game {
     pub metas: String, // change this to hashmap,
     pub game_brief: String,
 
+    //TODO check which one is correct  brand_ids or brands_id
+    #[graphql(skip)]
+    pub brands_id: Vec<ObjectId>
+
+    // Complex resolvers
+    // brands
+
+
     //TODO must write this later in Complex resolvers
-    // brand
     // platforms
     // products
     // related blogs
@@ -33,6 +41,7 @@ pub struct GameInput {
     pub release_date: Option<String>,
     pub metas: String, // change this to hashmap,
     pub game_brief: String,
+    pub brands_id: Vec<ObjectId>
 }
 
 impl Game {
