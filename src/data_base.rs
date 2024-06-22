@@ -2,10 +2,10 @@
 
 use spark_orm::Spark;
 use std::env::var;
-#[derive(Debug)]
-pub struct DBConfig {
-    pub valid_database: Vec<String>,
-}
+// #[derive(Debug)]
+// pub struct DBConfig {
+//     pub valid_database: Vec<String>,
+// }
 
 pub async fn init_db() {
     let db_user = var("CMS_DB_USER").expect("the DB_USER in not set");
