@@ -3,11 +3,13 @@ use serde::{Deserialize, Serialize};
 use crate::app::models::category::Category;
 use crate::app::models::product::Product;
 use crate::app::models::game::Game;
+use crate::app::models::brand::Brand;
 
 #[derive(Debug, Default, Serialize, Deserialize, SimpleObject)]
 #[graphql(concrete(name = "categories", params(Category)))]
 #[graphql(concrete(name = "products", params(Product)))]
 #[graphql(concrete(name = "games", params(Game)))]
+#[graphql(concrete(name = "brands", params(Brand)))]
 pub struct List<D>
     where
         D: Sync,
@@ -46,8 +48,9 @@ impl<D> List<D>
         }
     }
 
-    pub fn set_paginate(&mut self , paginate: Paginate){
+    pub fn set_paginate(mut self , paginate: Paginate) -> Self{
         self.meta_data.pagination = paginate;
+        self
     }
 }
 
@@ -61,8 +64,8 @@ impl Paginate {
         }
     }
 
-    pub fn get_offset(&self) -> usize {
-        (self.page - 1) * self.limit
+    pub fn get_offset(&self) -> u64 {
+        ((self.page - 1) * self.limit ) as u64
     }
 }
 
