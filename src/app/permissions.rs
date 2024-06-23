@@ -1,6 +1,6 @@
 #![allow(clippy::upper_case_acronyms)]
 
-use std::fmt::Display;
+// use std::fmt::Display;
 use strum::{Display, EnumString};
 
 #[derive(EnumString , Display)]
@@ -22,6 +22,14 @@ pub enum CategoryPermissions{
 #[derive(EnumString , Display)]
 #[strum(prefix="GAME_")]
 pub enum GamePermissions{
+    STORE,
+    UPDATE,
+    DELETE
+}
+
+#[derive(EnumString , Display)]
+#[strum(prefix="BRAND_")]
+pub enum BrandPermissions {
     STORE,
     UPDATE,
     DELETE

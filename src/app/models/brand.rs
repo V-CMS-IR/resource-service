@@ -1,5 +1,4 @@
-use async_graphql::SimpleObject;
-use mongodb::bson::oid::ObjectId;
+use async_graphql::{InputObject, SimpleObject};
 use serde::{Deserialize, Serialize};
 use spark_orm::Model;
 
@@ -8,6 +7,13 @@ use spark_orm::Model;
 pub struct Brand {
     pub title: String,
     pub slug: String,
-    pub game_id: ObjectId,
-    pub products_id: Vec<ObjectId>,
+
+    // complex resolvers
+    // pub products
+}
+
+#[derive(InputObject, Serialize, Deserialize, Debug)]
+pub struct BrandInput {
+    pub title: String,
+    pub slug: String,
 }
