@@ -21,7 +21,7 @@ pub struct Game {
 
     //TODO check which one is correct  brand_ids or brands_id
     #[graphql(skip)]
-    pub brands_id: Vec<ObjectId>
+    pub brand_ids: Vec<ObjectId>
 
     // Complex resolvers
     // brands

@@ -127,7 +127,7 @@ impl Game {
         }
         game_model.metas = data.metas;
         game_model.game_brief = data.game_brief;
-        game_model.brands_id = data.brands_id;
+        game_model.brand_ids = data.brands_id;
         // game_model
         let insert_update_id = game_model.save(None).await?;
         Ok(insert_update_id)
