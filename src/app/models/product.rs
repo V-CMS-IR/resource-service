@@ -1,4 +1,4 @@
-use async_graphql::{Enum, SimpleObject};
+use async_graphql::{Enum, InputObject, SimpleObject};
 use mongodb::bson::oid::ObjectId;
 use spark_orm::{Model};
 use serde::{Deserialize, Serialize};
@@ -13,25 +13,38 @@ pub struct Product {
     pub description: Option<String>,
     pub content: Option<Content>,
     pub status: Status,
-    pub meta: Option<Vec<Meta>>,
+    pub meta: Vec<Meta>,
     pub price: Price,
     pub brand_id: ObjectId,
 }
 
+#[derive(InputObject , Serialize , Deserialize , Default , Debug)]
+pub struct ProductInput{
+    pub title: String,
+    pub description: Option<String>,
+    pub content: Option<Content>,
+    pub status: Status,
+    pub meta: Vec<Meta>,
+    pub price: Price,
+    pub brand_id: ObjectId,
+}
 
-#[derive(SimpleObject, Debug, Serialize, Deserialize)]
+#[derive(SimpleObject, Debug, Serialize, Deserialize , InputObject)]
+#[graphql(input_name="MetaInput")]
 pub struct Meta {
     name: String,
     value: String,
 }
 
-#[derive(SimpleObject, Debug, Serialize, Deserialize)]
+#[derive(SimpleObject, Debug, Serialize, Deserialize , InputObject)]
+#[graphql(input_name="ContentInput")]
 pub struct Content {
     pub params: Vec<Param>,
     pub raw_content: String,
 }
 
-#[derive(SimpleObject, Debug, Serialize, Deserialize)]
+#[derive(SimpleObject, Debug, Serialize, Deserialize , InputObject)]
+#[graphql(input_name="InputParam")]
 pub struct Param {
     pub name: String,
     pub component: String,

@@ -14,12 +14,10 @@ pub struct Game {
     pub title: String,
     pub slug: String,
     pub category_id: ObjectId,
-    //TODO write these in resolvers
     pub release_date: Option<DateTime>,
     pub metas: String, // change this to hashmap,
     pub game_brief: String,
 
-    //TODO check which one is correct  brand_ids or brands_id
     #[graphql(skip)]
     pub brand_ids: Vec<ObjectId>
 

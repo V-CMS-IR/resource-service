@@ -1,15 +1,15 @@
-use std::str::FromStr;
 use async_graphql::{Error, Object};
-use mongodb::bson::{doc, to_document};
+use mongodb::bson::{Bson, doc};
 use mongodb::bson::oid::ObjectId;
 use mongodb::options::FindOptions;
 use spark_orm::Spark;
-use crate::app::models::product::{Content, Product, Status};
+use crate::app::models::product::{Product, ProductInput};
 use crate::types::ObjectID;
 use crate::app::permissions::ProductPermissions;
 use crate::app::models::AuthorizeGuard;
-use crate::app::models::category::Category;
+use crate::app::models::brand::Brand;
 use crate::app::util::{List, MetaData, Paginate};
+use crate::app::types::Result;
 
 #[derive(Default)]
 pub struct ProductQuery;
@@ -45,7 +45,9 @@ impl ProductQuery {
         }
         Ok(None)
     }
-    async fn products(&self, #[graphql(default = 1)] page: usize, #[graphql(default = 15)]limit: usize)
+    async fn products(&self, #[graphql(default = 1)] page: usize, #[graphql(
+        default = 15
+    )]limit: usize)
                       -> async_graphql::Result<List<Product>, Error> {
         let db = Spark::get_db();
         let product = Product::new_model(Some(&db));
@@ -71,7 +73,7 @@ impl ProductQuery {
 
         let unwrapped_founded: Vec<Product> = founded
             .into_iter()
-            .filter_map(Result::ok) // Filter out Err variants and unwrap Ok variants
+            .filter_map(|product| product.ok()) // Filter out Err variants and unwrap Ok variants
             .collect();
         Ok(
             List {
@@ -80,7 +82,7 @@ impl ProductQuery {
                     pagination: Paginate {
                         page,
                         total,
-                        limit
+                        limit,
                     }
                 },
             }
@@ -88,115 +90,16 @@ impl ProductQuery {
         // Ok(re)
     }
 }
-
 #[Object]
 impl ProductMutation {
     #[graphql(guard = "AuthorizeGuard::new(ProductPermissions::STORE) ")]
-    async fn new_product<'a>(
-        &self,
-        category_id: String,
-        title: String,
-        content: Option<String>,
-        description: Option<String>,
-        status: Option<Status>,
-        price: crate::app::models::product::Price,
-    ) -> async_graphql::Result<String, Error> {
-        let mut product = Product::new_model(None);
-        let mut category_model = Category::new_model(None);
-        product.title = title;
-
-        //this is a key to a category
-        let c_id = ObjectId::from_str(&category_id)?;
-        let f_c = category_model.find_one(
-            doc! {
-               "_id" : c_id
-            },
-            None,
-        );
-        match f_c.await? {
-            Some(_) => {
-                product.description = description;
-                product.status = status.unwrap_or_default();
-                product.price = price;
-                if content.is_some() {
-                    product.content = Some(Content {
-                        params: vec![],
-                        raw_content: content.unwrap(),
-                    });
-                }
-                let re = product.save(None).await?;
-                Ok(re.to_string())
-            }
-            None => {
-                return Err(
-                    Error::new(
-                        "Can't find the category"
-                    )
-                );
-            }
-        }
+    async fn new_product<'a>(&self, data: ProductInput) -> Result<Bson> {
+        Product::store_update(None, data).await
     }
 
     #[graphql(guard = "AuthorizeGuard::new(ProductPermissions::UPDATE)")]
-    async fn update_product(&self,
-                            id: ObjectID,
-                            category_id: ObjectID,
-                            title: Option<String>,
-                            content: Option<String>,
-                            description: Option<String>,
-                            status: Option<Status>,
-                            price: crate::app::models::product::Price,
-    ) -> async_graphql::Result<u64, Error> {
-        let mut product = Product::new_model(None);
-
-        if category_id.0.is_some() {
-            let mut category_model = Category::new_model(None);
-            let _ = category_model.find_one(
-                doc! {
-               "_id" : category_id.0.unwrap()
-            },
-                None,
-            ).await?;
-        }
-
-        if title.is_some() {
-            product.title = title.unwrap();
-        }
-        if content.is_some() {
-            product.content = Some(
-                Content {
-                    raw_content: content.unwrap(),
-                    params: vec![],
-                }
-            );
-        }
-        product.description = description;
-        if status.is_some() {
-            product.status = status.unwrap();
-        }
-        product.price = price;
-        let doc = to_document(&product.take_inner())?;
-        let result = product.update(
-            doc! {
-                "_id": id.0
-            },
-            doc! {
-                "$set": doc
-            }
-            , None).await;
-        if let Ok(re) = result {
-            return Ok(re.modified_count);
-        }
-
-        println!("The Product Update error {:?} ", result);
-
-        Err(
-            Error {
-                message: "Can't find product to update".into(),
-                source: None,
-                extensions: None,
-            }
-        )
+    async fn update_product(&self, product_id: ObjectId, data: ProductInput) -> Result<Bson> {
+        Product::store_update(Some(product_id), data).await
     }
 
     #[graphql(guard = "AuthorizeGuard::new(ProductPermissions::DELETE)")]
@@ -212,6 +115,36 @@ impl ProductMutation {
         ).await?;
         println!("THE RE {re}");
         Ok("post deleted".into())
+    }
+}
+
+
+impl Product {
+    pub async fn store_update(id: Option<ObjectId>, data: ProductInput) -> Result<Bson> {
+        let mut product_model = Product::new_model(None);
+        let mut brand_model = Brand::new_model(None);
+
+        if let Some(id) = id {
+            product_model._id = Some(id);
+        }
+
+        brand_model.find_one(
+            doc! {
+                "_id" : data.brand_id
+            },
+            None,
+        ).await.expect("Brand not exists");
+
+        product_model.title = data.title;
+        product_model.description = data.description;
+        product_model.content = data.content;
+        product_model.status = data.status;
+        product_model.meta = data.meta;
+        product_model.price = data.price;
+        product_model.brand_id = data.brand_id;
+
+        let re = product_model.save(None).await?;
+        Ok(re)
     }
 }
 
