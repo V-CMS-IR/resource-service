@@ -3,6 +3,7 @@ mod data_base;
 mod server;
 mod types;
 mod app;
+mod file_storage;
 
 // lib usages
 use dotenv::dotenv;

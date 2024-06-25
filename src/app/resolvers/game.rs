@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use async_graphql::{ComplexObject, Object};
 use mongodb::bson::oid::ObjectId;
 use crate::app::models::game::{Game, GameInput};
@@ -58,10 +59,14 @@ impl GameQuery {
 impl Game {
     pub async fn brands(&self) -> Result<List<Brand>> {
         let brand_model = Brand::new_model(None);
+        let s = &self.brand_ids;
 
+        println!("HELLO {:?} " , s);
         let founded = brand_model.find_and_collect(
             doc! {
-                "brand_id": self._id
+                "_id": {
+                    "$in" : s
+                }
             },
             None,
         ).await?;
@@ -95,28 +100,30 @@ impl Game {
         let mut category = Category::new_model(None);
         let mut brand_model = Brand::new_model(None);
 
-        let _ = category.find_one(
+        category.find_one(
             doc! {
                 "_id": data.category_id
             },
             None,
-        ).await.expect("Can't find the Category");
+        ).await?.ok_or_else(||anyhow!("Can't find category"))?;
         for brand_id in &data.brands_id {
-            let _ = brand_model.find_one(
+            //TODO instead of using this must use find of mongodb
+            //just check that brands exists or not
+            brand_model.find_one(
                 doc! {
                 "_id": brand_id
             },
                 None,
-            ).await?.expect("Can't find the Brand");
+            ).await?.ok_or_else(||anyhow!("Can't find the Brand"))?;
         }
 
         if let Some(id) = id {
-            game_model.find_one(
+             game_model.find_one(
                 doc! {
                     "_id" : id
                 },
                 None,
-            ).await.expect("Can't find Game");
+            ).await?.ok_or_else(||anyhow!("Can't find the game"))?;
         }
 
         game_model.title = data.title;

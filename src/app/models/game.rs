@@ -17,6 +17,7 @@ pub struct Game {
     pub release_date: Option<DateTime>,
     pub metas: String, // change this to hashmap,
     pub game_brief: String,
+    pub thumbnail_url: String,
 
     #[graphql(skip)]
     pub brand_ids: Vec<ObjectId>
@@ -39,7 +40,8 @@ pub struct GameInput {
     pub release_date: Option<String>,
     pub metas: String, // change this to hashmap,
     pub game_brief: String,
-    pub brands_id: Vec<ObjectId>
+    pub brands_id: Vec<ObjectId>,
+    pub thumbnail: Option<String>
 }
 
 impl Game {
